@@ -26,7 +26,8 @@ sudo apt-get install --no-install-recommends -y \
     libxinerama-dev \
     libfontconfig1-dev \
     libfreetype-dev \
-    fonts-jetbrains-mono
+    fonts-jetbrains-mono \
+    fonts-noto-cjk
 
 # 上面每个软件包的用途：
 #
@@ -66,6 +67,11 @@ sudo apt-get install --no-install-recommends -y \
 #
 # fonts-jetbrains-mono
 #   JetBrains Mono 字体，供 dwm、st 和 dmenu 使用。
+#
+# fonts-noto-cjk
+#   提供简体中文、繁体中文、日文和韩文字形。
+#   当 JetBrains Mono 不包含中文字符时，由它负责字体回退，
+#   避免终端、浏览器和 IDE 中的中文显示为方框。
 
 mkdir -p "$SUCKLESS_DIR"
 
