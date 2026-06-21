@@ -11,3 +11,6 @@
 /suckless/dwm/*.tar.gz
 /suckless/st/*.tar.gz
 /suckless/dmenu/*.tar.gz
+
+# 本地功能开发 worktree
+/.worktrees/
