@@ -29,7 +29,8 @@ sudo apt-get install --no-install-recommends -y \
     libfreetype-dev \
     fonts-jetbrains-mono \
     fonts-noto-cjk \
-    polybar
+    polybar \
+    feh
 
 # 上面每个软件包的用途：
 #
@@ -81,6 +82,10 @@ sudo apt-get install --no-install-recommends -y \
 # polybar
 #   提供可配置的 X11 状态栏，用于显示窗口标题、时间、网络和电池。
 #   APT 会自动安装它运行所必需的图形与音频库。
+#
+# feh
+#   轻量 X11 图片工具，用于在启动 dwm 时设置单屏或多屏壁纸。
+#   设置完成后无需常驻后台。
 
 mkdir -p "$SUCKLESS_DIR"
 

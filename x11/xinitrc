@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# 设置桌面壁纸。脚本执行完成后 feh 不需要常驻。
+"$HOME/workspace/personal/debian-desktop/wallpapers/set-wallpaper.sh"
+
 # 由 startx 启动 dwm。
 # exec 让 dwm 接管当前 X11 会话；退出 dwm 时，X11 会话随之结束。
 exec dwm
