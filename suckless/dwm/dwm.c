@@ -39,6 +39,7 @@
 #ifdef XINERAMA
 #include <X11/extensions/Xinerama.h>
 #endif /* XINERAMA */
+#include <X11/extensions/Xrender.h>
 #include <X11/Xft/Xft.h>
 
 #include "drw.h"
@@ -84,6 +85,12 @@ typedef struct {
 
 typedef struct Monitor Monitor;
 typedef struct Client Client;
+typedef struct Preview Preview;
+struct Preview {
+	int x, y, w, h;
+	Window win;
+};
+
 struct Client {
 	char name[256];
 	float mina, maxa;
@@ -96,6 +103,7 @@ struct Client {
 	Client *next;
 	Client *snext;
 	Monitor *mon;
+	Preview preview;
 	Window win;
 };
 
@@ -153,6 +161,7 @@ static void buttonpress(XEvent *e);
 static void checkotherwm(void);
 static void cleanup(void);
 static void cleanupmon(Monitor *mon);
+static void clearoverview(Monitor *m, Client *selected);
 static void clientmessage(XEvent *e);
 static void configure(Client *c);
 static void configurenotify(XEvent *e);
@@ -174,6 +183,7 @@ static Atom getatomprop(Client *c, Atom prop);
 static int getrootptr(int *x, int *y);
 static long getstate(Window w);
 static int gettextprop(Window w, Atom atom, char *text, unsigned int size);
+static XImage *getwindowximage(Client *c);
 static void grabbuttons(Client *c, int focused);
 static void grabkeys(void);
 static void incnmaster(const Arg *arg);
@@ -190,6 +200,7 @@ static void motionnotify(XEvent *e);
 static void movemouse(const Arg *arg);
 static Client *nexttiled(Client *c);
 static void pop(Client *c);
+static void previewallwin(const Arg *arg);
 static void propertynotify(XEvent *e);
 static void quit(const Arg *arg);
 static Monitor *recttomon(int x, int y, int w, int h);
@@ -199,6 +210,7 @@ static void resizemouse(const Arg *arg);
 static void restack(Monitor *m);
 static void run(void);
 static void scan(void);
+static XImage *scaledownimage(Client *c, unsigned int width, unsigned int height);
 static int sendevent(Client *c, Atom proto);
 static void sendmon(Client *c, Monitor *m);
 static void setclientstate(Client *c, long state);
@@ -209,6 +221,7 @@ static void setfullscreen(Client *c, int fullscreen);
 static void setlayout(const Arg *arg);
 static void setmfact(const Arg *arg);
 static void setnumdesktops(void);
+static int setpreviewwins(Monitor *m);
 static void setup(void);
 static void setviewport(void);
 static void seturgent(Client *c, int urg);
@@ -541,6 +554,27 @@ cleanupmon(Monitor *mon)
 		XDestroyWindow(dpy, mon->barwin);
 	}
 	free(mon);
+}
+
+void
+clearoverview(Monitor *m, Client *selected)
+{
+	Client *c;
+
+	for (c = m->clients; c; c = c->next) {
+		if (c->preview.win)
+			XDestroyWindow(dpy, c->preview.win);
+		c->preview.win = None;
+		XMapWindow(dpy, c->win);
+	}
+
+	if (selected) {
+		Arg arg = { .ui = selected->tags };
+		selmon = m;
+		view(&arg);
+		focus(selected);
+	}
+	arrange(m);
 }
 
 void
@@ -975,6 +1009,51 @@ gettextprop(Window w, Atom atom, char *text, unsigned int size)
 	return 1;
 }
 
+XImage *
+getwindowximage(Client *c)
+{
+	int hasalpha;
+	Picture destination, source;
+	Pixmap pixmap;
+	XImage *image;
+	XRenderPictFormat *destinationformat, *sourceformat;
+	XRenderPictureAttributes attributes = { .subwindow_mode = IncludeInferiors };
+	XRenderColor background = { 0, 0, 0, 0xffff };
+	XWindowAttributes windowattributes;
+
+	if (!XGetWindowAttributes(dpy, c->win, &windowattributes))
+		return NULL;
+	sourceformat = XRenderFindVisualFormat(dpy, windowattributes.visual);
+	destinationformat = XRenderFindVisualFormat(dpy, DefaultVisual(dpy, screen));
+	if (!sourceformat || !destinationformat || c->w <= 0 || c->h <= 0)
+		return NULL;
+
+	hasalpha = sourceformat->type == PictTypeDirect && sourceformat->direct.alphaMask;
+	pixmap = XCreatePixmap(dpy, root, c->w, c->h, DefaultDepth(dpy, screen));
+	source = XRenderCreatePicture(dpy, c->win, sourceformat,
+		CPSubwindowMode, &attributes);
+	destination = XRenderCreatePicture(dpy, pixmap, destinationformat, 0, NULL);
+	if (!source || !destination) {
+		if (source)
+			XRenderFreePicture(dpy, source);
+		if (destination)
+			XRenderFreePicture(dpy, destination);
+		XFreePixmap(dpy, pixmap);
+		return NULL;
+	}
+
+	XRenderFillRectangle(dpy, PictOpSrc, destination, &background,
+		0, 0, c->w, c->h);
+	XRenderComposite(dpy, hasalpha ? PictOpOver : PictOpSrc,
+		source, None, destination, 0, 0, 0, 0, 0, 0, c->w, c->h);
+	image = XGetImage(dpy, pixmap, 0, 0, c->w, c->h, AllPlanes, ZPixmap);
+
+	XRenderFreePicture(dpy, source);
+	XRenderFreePicture(dpy, destination);
+	XFreePixmap(dpy, pixmap);
+	return image;
+}
+
 void
 grabbuttons(Client *c, int focused)
 {
@@ -1359,6 +1438,77 @@ pop(Client *c)
 }
 
 void
+previewallwin(const Arg *arg)
+{
+	Client *c, *selected;
+	int hasdestroy = 0;
+	KeySym keysym;
+	Monitor *m = selmon;
+	XEvent destroyevent, event;
+
+	if (!m->clients || !setpreviewwins(m))
+		return;
+
+	selected = m->sel ? m->sel : m->clients;
+	if (selected && selected->preview.win)
+		XSetWindowBorder(dpy, selected->preview.win,
+			scheme[SchemeSel][ColBorder].pixel);
+
+	for (;;) {
+		XNextEvent(dpy, &event);
+		if (event.type == KeyPress) {
+			keysym = XLookupKeysym(&event.xkey, 0);
+			if (keysym == XK_Escape) {
+				selected = NULL;
+				break;
+			}
+			if (CLEANMASK(event.xkey.state) == MODKEY && keysym == XK_a)
+				break;
+			if (CLEANMASK(event.xkey.state) == MODKEY && keysym == XK_Tab) {
+				if (selected && selected->preview.win)
+					XSetWindowBorder(dpy, selected->preview.win,
+						scheme[SchemeNorm][ColBorder].pixel);
+				selected = selected && selected->next ? selected->next : m->clients;
+				if (selected && selected->preview.win) {
+					XSetWindowBorder(dpy, selected->preview.win,
+						scheme[SchemeSel][ColBorder].pixel);
+					XWarpPointer(dpy, None, root, 0, 0, 0, 0,
+						selected->preview.x + selected->preview.w / 2,
+						selected->preview.y + selected->preview.h / 2);
+				}
+			}
+		} else if (event.type == EnterNotify) {
+			for (c = m->clients; c; c = c->next)
+				if (event.xcrossing.window == c->preview.win) {
+					if (selected && selected->preview.win)
+						XSetWindowBorder(dpy, selected->preview.win,
+							scheme[SchemeNorm][ColBorder].pixel);
+					selected = c;
+					XSetWindowBorder(dpy, c->preview.win,
+						scheme[SchemeSel][ColBorder].pixel);
+					break;
+				}
+		} else if (event.type == ButtonPress && event.xbutton.button == Button1) {
+			for (c = m->clients; c; c = c->next)
+				if (event.xbutton.window == c->preview.win) {
+					selected = c;
+					break;
+				}
+			break;
+		} else if (event.type == DestroyNotify) {
+			selected = NULL;
+			destroyevent = event;
+			hasdestroy = 1;
+			break;
+		}
+	}
+
+	clearoverview(m, selected);
+	if (hasdestroy)
+		destroynotify(&destroyevent);
+}
+
+void
 propertynotify(XEvent *e)
 {
 	Client *c;
@@ -1530,6 +1680,38 @@ run(void)
 			handler[ev.type](&ev); /* call handler */
 }
 
+XImage *
+scaledownimage(Client *c, unsigned int width, unsigned int height)
+{
+	unsigned int factor, factorh, factorw, x, y;
+	XImage *image, *original;
+
+	original = getwindowximage(c);
+	if (!original || width == 0 || height == 0)
+		return NULL;
+
+	factorw = (original->width + width - 1) / width;
+	factorh = (original->height + height - 1) / height;
+	factor = MAX(MAX(factorw, factorh), 1);
+
+	image = XCreateImage(dpy, DefaultVisual(dpy, screen),
+		DefaultDepth(dpy, screen), ZPixmap, 0, NULL,
+		MAX(original->width / factor, 1),
+		MAX(original->height / factor, 1), 32, 0);
+	if (!image) {
+		XDestroyImage(original);
+		return NULL;
+	}
+	image->data = ecalloc(image->height, image->bytes_per_line);
+	for (y = 0; y < (unsigned int)image->height; y++)
+		for (x = 0; x < (unsigned int)image->width; x++)
+			XPutPixel(image, x, y,
+				XGetPixel(original, x * factor, y * factor));
+
+	XDestroyImage(original);
+	return image;
+}
+
 void
 scan(void)
 {
@@ -1626,6 +1808,69 @@ void
 setnumdesktops(void){
 	long data[] = { TAGSLENGTH };
 	XChangeProperty(dpy, root, netatom[NetNumberOfDesktops], XA_CARDINAL, 32, PropModeReplace, (unsigned char *)data, 1);
+}
+
+int
+setpreviewwins(Monitor *m)
+{
+	const unsigned int gap = 18;
+	const unsigned int outer = 60;
+	const unsigned int padding = 12;
+	unsigned int availableh, availablew, cardh, cardw, cols, gridh;
+	unsigned int i, imagex, imagey, n, row, rowcount, rowoffset, rows, rowwidth;
+	Client *c;
+	GC gc;
+	XImage *image;
+
+	for (n = 0, c = m->clients; c; c = c->next, n++);
+	if (n == 0)
+		return 0;
+	for (cols = 1; cols * cols < n; cols++);
+	rows = (n + cols - 1) / cols;
+	availablew = m->ww - 2 * outer - (cols - 1) * gap;
+	availableh = m->wh - 2 * outer - (rows - 1) * gap;
+
+	/* Use equal 16:10 cards and fit the whole grid inside the monitor. */
+	cardw = availablew / cols;
+	cardh = cardw * 10 / 16;
+	if (cardh * rows > availableh) {
+		cardh = availableh / rows;
+		cardw = cardh * 16 / 10;
+	}
+	gridh = rows * cardh + (rows - 1) * gap;
+
+	for (i = 0, c = m->clients; c; c = c->next, i++) {
+		image = scaledownimage(c, cardw - 2 * padding, cardh - 2 * padding);
+		if (!image) {
+			clearoverview(m, NULL);
+			return 0;
+		}
+		row = i / cols;
+		rowcount = MIN(cols, n - row * cols);
+		rowwidth = rowcount * cardw + (rowcount - 1) * gap;
+		rowoffset = (m->ww - rowwidth) / 2;
+		c->preview.w = cardw;
+		c->preview.h = cardh;
+		c->preview.x = m->wx + rowoffset + (i % cols) * (cardw + gap);
+		c->preview.y = m->wy + (m->wh - gridh) / 2 + row * (cardh + gap);
+		c->preview.win = XCreateSimpleWindow(dpy, root,
+			c->preview.x, c->preview.y, c->preview.w, c->preview.h,
+			2, scheme[SchemeNorm][ColBorder].pixel,
+			scheme[SchemeNorm][ColBg].pixel);
+		XSelectInput(dpy, c->preview.win,
+			ButtonPressMask|EnterWindowMask|LeaveWindowMask);
+		gc = XCreateGC(dpy, c->preview.win, 0, NULL);
+		imagex = (cardw - image->width) / 2;
+		imagey = (cardh - image->height) / 2;
+		XPutImage(dpy, c->preview.win, gc, image, 0, 0, imagex, imagey,
+			image->width, image->height);
+		XFreeGC(dpy, gc);
+		XDestroyImage(image);
+		XUnmapWindow(dpy, c->win);
+		XMapRaised(dpy, c->preview.win);
+	}
+	XSync(dpy, False);
+	return 1;
 }
 
 void

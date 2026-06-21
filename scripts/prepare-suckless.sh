@@ -24,6 +24,7 @@ sudo apt-get install --no-install-recommends -y \
     libx11-dev \
     libxft-dev \
     libxinerama-dev \
+    libxrender-dev \
     libfontconfig1-dev \
     libfreetype-dev \
     fonts-jetbrains-mono \
@@ -59,6 +60,9 @@ sudo apt-get install --no-install-recommends -y \
 #
 # libxinerama-dev
 #   dwm 的多显示器支持。
+#
+# libxrender-dev
+#   Overview 使用 XRender 抓取并缩放窗口预览图。
 #
 # libfontconfig1-dev
 #   编译 st 时用于查找和匹配系统字体。
