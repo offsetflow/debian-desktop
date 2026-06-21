@@ -182,6 +182,7 @@ static void keypress(XEvent *e);
 static void killclient(const Arg *arg);
 static void manage(Window w, XWindowAttributes *wa);
 static void managealtbar(Window win, XWindowAttributes *wa);
+static void magicgrid(Monitor *m);
 static void mappingnotify(XEvent *e);
 static void maprequest(XEvent *e);
 static void monocle(Monitor *m);
@@ -1163,6 +1164,66 @@ managealtbar(Window win, XWindowAttributes *wa)
 	XMapWindow(dpy, win);
 	XChangeProperty(dpy, root, netatom[NetClientList], XA_WINDOW, 32, PropModeAppend,
 		(unsigned char *) &win, 1);
+}
+
+void
+magicgrid(Monitor *m)
+{
+	unsigned int ch, cols, cw, cx, cy, dx, i, ih, iv, n, oh, ov, overcols, rows;
+	Client *c;
+
+	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++);
+	if (n == 0)
+		return;
+
+	oh = gapsenabled && !(smartgaps && n == 1) ? currentgappoh : 0;
+	ov = gapsenabled && !(smartgaps && n == 1) ? currentgappov : 0;
+	ih = gapsenabled ? currentgappih : 0;
+	iv = gapsenabled ? currentgappiv : 0;
+
+	if (n == 1) {
+		c = nexttiled(m->clients);
+		cw = (m->ww - 2 * ov) * 0.70;
+		ch = (m->wh - 2 * oh) * 0.65;
+		resize(c,
+			m->wx + (m->ww - cw) / 2,
+			m->wy + (m->wh - ch) / 2,
+			cw - 2 * c->bw,
+			ch - 2 * c->bw,
+			0);
+		return;
+	}
+
+	if (n == 2) {
+		c = nexttiled(m->clients);
+		cw = (m->ww - 2 * ov - ih) / 2;
+		ch = (m->wh - 2 * oh) * 0.65;
+		cy = m->wy + (m->wh - ch) / 2;
+		resize(c, m->wx + ov, cy,
+			cw - 2 * c->bw, ch - 2 * c->bw, 0);
+		c = nexttiled(c->next);
+		resize(c, m->wx + ov + cw + ih, cy,
+			cw - 2 * c->bw, ch - 2 * c->bw, 0);
+		return;
+	}
+
+	for (cols = 1; cols * cols < n; cols++);
+	rows = ((cols - 1) * cols >= n) ? cols - 1 : cols;
+	cw = (m->ww - 2 * ov - (cols - 1) * ih) / cols;
+	ch = (m->wh - 2 * oh - (rows - 1) * iv) / rows;
+	overcols = n % cols;
+	dx = overcols
+		? (m->ww - (overcols * cw + (overcols - 1) * ih)) / 2
+		: ov;
+
+	for (i = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++) {
+		cx = ov + (i % cols) * (cw + ih);
+		cy = oh + (i / cols) * (ch + iv);
+		if (overcols && i >= n - overcols)
+			cx = dx + (i - (n - overcols)) * (cw + ih);
+		resize(c, m->wx + cx, m->wy + cy,
+			cw - 2 * c->bw, ch - 2 * c->bw, 0);
+	}
 }
 
 void
