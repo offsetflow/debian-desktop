@@ -11,7 +11,15 @@
 - 编译验证：`make -C suckless/dwm clean && make -C suckless/dwm`。
 - 提交：`feat: keep new windows in the stack area`。
 
-## Task 2: Magic Grid 布局
+## Task 2: 最小 Gaps 基础
+
+- 增加水平/垂直内间距与外间距配置。
+- Tile 与后续 Magic Grid 共用 gap 变量。
+- 单窗口时启用 smart gaps，取消外边距。
+- 提供 gap 开关与统一增减函数，不移植 vanitygaps 的额外布局。
+- 编译验证并提交：`feat: add minimal window gaps`。
+
+## Task 3: Magic Grid 布局
 
 - 从参考实现移植 `magicgrid()` 和 `grid()`。
 - 一窗口时居中显示；两窗口时并排居中；更多窗口时按接近正方形的网格排列。
@@ -20,7 +28,7 @@
 - 编译验证，并通过打开 1、2、3、5 个 `st` 窗口人工检查布局。
 - 提交：`feat: add magic grid layout`。
 
-## Task 3: Overview
+## Task 4: Overview
 
 - 在 `Client` 中增加预览窗口、缩放图像和坐标状态。
 - 移植窗口截图、缩放、预览布局、鼠标悬停、点击选择和 `Alt+Tab` 轮换逻辑。
@@ -36,7 +44,7 @@
   - Polybar 继续常驻且多屏正常。
 - 提交：`feat: add window overview`。
 
-## Task 4: 最终验证
+## Task 5: 最终验证
 
 - 重新编译无错误、无新增编译警告。
 - 验证 Tile、Magic Grid、Overview、Polybar 和双显示器。
