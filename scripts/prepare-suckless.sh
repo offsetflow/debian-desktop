@@ -27,7 +27,8 @@ sudo apt-get install --no-install-recommends -y \
     libfontconfig1-dev \
     libfreetype-dev \
     fonts-jetbrains-mono \
-    fonts-noto-cjk
+    fonts-noto-cjk \
+    polybar
 
 # 上面每个软件包的用途：
 #
@@ -72,6 +73,10 @@ sudo apt-get install --no-install-recommends -y \
 #   提供简体中文、繁体中文、日文和韩文字形。
 #   当 JetBrains Mono 不包含中文字符时，由它负责字体回退，
 #   避免终端、浏览器和 IDE 中的中文显示为方框。
+#
+# polybar
+#   提供可配置的 X11 状态栏，用于显示窗口标题、时间、网络和电池。
+#   APT 会自动安装它运行所必需的图形与音频库。
 
 mkdir -p "$SUCKLESS_DIR"
 
