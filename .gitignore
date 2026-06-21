@@ -1,0 +1,13 @@
+# suckless 编译生成的目标文件
+*.o
+
+# 本仓库内三个项目的本地编译产物
+/suckless/dwm/dwm
+/suckless/st/st
+/suckless/dmenu/dmenu
+/suckless/dmenu/stest
+
+# suckless 的打包产物
+/suckless/dwm/*.tar.gz
+/suckless/st/*.tar.gz
+/suckless/dmenu/*.tar.gz
