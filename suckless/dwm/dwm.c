@@ -177,6 +177,7 @@ static int gettextprop(Window w, Atom atom, char *text, unsigned int size);
 static void grabbuttons(Client *c, int focused);
 static void grabkeys(void);
 static void incnmaster(const Arg *arg);
+static void incrgaps(const Arg *arg);
 static void keypress(XEvent *e);
 static void killclient(const Arg *arg);
 static void manage(Window w, XWindowAttributes *wa);
@@ -218,6 +219,7 @@ static void tagmon(const Arg *arg);
 static void tile(Monitor *m);
 static void togglebar(const Arg *arg);
 static void togglefloating(const Arg *arg);
+static void togglegaps(const Arg *arg);
 static void toggletag(const Arg *arg);
 static void toggleview(const Arg *arg);
 static void unfocus(Client *c, int setfocus);
@@ -280,6 +282,12 @@ static Window root, wmcheckwin;
 
 /* configuration, allows nested code to access above variables */
 #include "config.h"
+
+static unsigned int currentgappih;
+static unsigned int currentgappiv;
+static unsigned int currentgappoh;
+static unsigned int currentgappov;
+static int gapsenabled = 1;
 
 /* compile-time check if all tags fit into an unsigned int bit array. */
 struct NumTags { char limitexceeded[LENGTH(tags) > 31 ? -1 : 1]; };
@@ -1022,6 +1030,18 @@ incnmaster(const Arg *arg)
 	arrange(selmon);
 }
 
+void
+incrgaps(const Arg *arg)
+{
+	int delta = arg->i;
+
+	currentgappih = MAX((int)currentgappih + delta, 0);
+	currentgappiv = MAX((int)currentgappiv + delta, 0);
+	currentgappoh = MAX((int)currentgappoh + delta, 0);
+	currentgappov = MAX((int)currentgappov + delta, 0);
+	arrange(NULL);
+}
+
 #ifdef XINERAMA
 static int
 isuniquegeom(XineramaScreenInfo *unique, size_t n, XineramaScreenInfo *info)
@@ -1630,6 +1650,10 @@ setup(void)
 
 	/* clean up any zombies (inherited from .xinitrc etc) immediately */
 	while (waitpid(-1, NULL, WNOHANG) > 0);
+	currentgappih = gappih;
+	currentgappiv = gappiv;
+	currentgappoh = gappoh;
+	currentgappov = gappov;
 
 	/* init screen */
 	screen = DefaultScreen(dpy);
@@ -1786,28 +1810,37 @@ tagmon(const Arg *arg)
 void
 tile(Monitor *m)
 {
-	unsigned int i, n, h, mw, my, ty;
+	unsigned int i, n, h, ih, iv, mw, my, oh, ov, ty;
 	Client *c;
 
 	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++);
 	if (n == 0)
 		return;
 
+	oh = gapsenabled && !(smartgaps && n == 1) ? currentgappoh : 0;
+	ov = gapsenabled && !(smartgaps && n == 1) ? currentgappov : 0;
+	ih = gapsenabled ? currentgappih : 0;
+	iv = gapsenabled ? currentgappiv : 0;
+
 	if (n > m->nmaster)
-		mw = m->nmaster ? m->ww * m->mfact : 0;
+		mw = m->nmaster ? (m->ww - 2 * ov - ih) * m->mfact : 0;
 	else
-		mw = m->ww;
-	for (i = my = ty = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++)
+		mw = m->ww - 2 * ov;
+	for (i = 0, my = ty = oh, c = nexttiled(m->clients);
+	     c; c = nexttiled(c->next), i++)
 		if (i < m->nmaster) {
-			h = (m->wh - my) / (MIN(n, m->nmaster) - i);
-			resize(c, m->wx, m->wy + my, mw - (2*c->bw), h - (2*c->bw), 0);
-			if (my + HEIGHT(c) < m->wh)
-				my += HEIGHT(c);
+			h = (m->wh - my - oh
+			   - iv * (MIN(n, m->nmaster) - i - 1))
+			  / (MIN(n, m->nmaster) - i);
+			resize(c, m->wx + ov, m->wy + my,
+				mw - 2 * c->bw, h - 2 * c->bw, 0);
+			my += HEIGHT(c) + iv;
 		} else {
-			h = (m->wh - ty) / (n - i);
-			resize(c, m->wx + mw, m->wy + ty, m->ww - mw - (2*c->bw), h - (2*c->bw), 0);
-			if (ty + HEIGHT(c) < m->wh)
-				ty += HEIGHT(c);
+			h = (m->wh - ty - oh - iv * (n - i - 1)) / (n - i);
+			resize(c, m->wx + ov + mw + ih, m->wy + ty,
+				m->ww - mw - 2 * ov - ih - 2 * c->bw,
+				h - 2 * c->bw, 0);
+			ty += HEIGHT(c) + iv;
 		}
 }
 
@@ -1832,6 +1865,13 @@ togglefloating(const Arg *arg)
 		resize(selmon->sel, selmon->sel->x, selmon->sel->y,
 			selmon->sel->w, selmon->sel->h, 0);
 	arrange(selmon);
+}
+
+void
+togglegaps(const Arg *arg)
+{
+	gapsenabled = !gapsenabled;
+	arrange(NULL);
 }
 
 void

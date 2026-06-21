@@ -40,6 +40,11 @@ static const int nmaster     = 1;    /* number of clients in master area */
 static const int resizehints = 1;    /* 1 means respect size hints in tiled resizals */
 static const int lockfullscreen = 1; /* 1 will force focus on the fullscreen window */
 static const int refreshrate = 120;  /* refresh rate (per second) for client move/resize */
+static const unsigned int gappih = 10; /* horizontal inner gap */
+static const unsigned int gappiv = 10; /* vertical inner gap */
+static const unsigned int gappoh = 10; /* horizontal outer gap */
+static const unsigned int gappov = 10; /* vertical outer gap */
+static const int smartgaps = 1;        /* remove outer gaps with one tiled window */
 
 static const Layout layouts[] = {
 	/* symbol     arrange function */
@@ -83,6 +88,9 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[2]} },
 	{ MODKEY,                       XK_space,  setlayout,      {0} },
 	{ MODKEY|ShiftMask,             XK_space,  togglefloating, {0} },
+	{ MODKEY,                       XK_g,      togglegaps,     {0} },
+	{ MODKEY|ControlMask,           XK_equal,  incrgaps,       {.i = +2} },
+	{ MODKEY|ControlMask,           XK_minus,  incrgaps,       {.i = -2} },
 	{ MODKEY,                       XK_0,      view,           {.ui = ~0 } },
 	{ MODKEY|ShiftMask,             XK_0,      tag,            {.ui = ~0 } },
 	{ MODKEY,                       XK_comma,  focusmon,       {.i = -1 } },
