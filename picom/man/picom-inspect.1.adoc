@@ -1,0 +1,44 @@
+= picom-inspect(1)
+Yuxuan Shui
+:doctype:     manpage
+:mansource:  picom-inspect
+:manversion: {picom-version}
+:manmanual:  User Commands
+
+NAME
+----
+picom-inspect - easily test your picom rules
+
+SYNOPSIS
+--------
+*picom-inspect* [_OPTIONS_]
+
+DESCRIPTION
+-----------
+*picom-inspect* matches your picom rules against a window of your choosing. It helps you test your rules, and shows you which ones of your rules (don't) work.
+
+OPTIONS
+-------
+*picom-inspect* accepts all options that *picom* does. Naturally, most of those options will not be relevant.
+
+These are some of the options you might find useful (See *picom*(1) for descriptions of what they do):
+
+*--config*, *--log-level*, *--log-file*, all the options related to rules.
+
+*picom-inspect* also accepts some extra options: :::
+
+  *--monitor*:: Keep *picom-inspect* running in a loop, and dump information every time something changed about a window.
+
+NOTES
+-----
+*picom-inspect* is prototype right now. If you find any bug, for example, if rules are matched differently compared to *picom*, please submit bug reports to:
+
+<https://github.com/yshui/picom>
+
+RESOURCES
+---------
+Homepage: <https://github.com/yshui/picom>
+
+SEE ALSO
+--------
+*xcompmgr*(1), xref:picom.1.adoc[*picom*(1)]

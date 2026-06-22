@@ -1,0 +1,983 @@
+= picom(1)
+Yuxuan Shui
+:doctype:    manpage
+:mansource:  picom
+:manversion: {picom-version}
+:manmanual:  User Commands
+:source-highlighter: highlight.js
+:highlightjs-languages: glsl
+:toc: right
+
+NAME
+----
+picom - a compositor for X11
+
+SYNOPSIS
+--------
+*picom* [_OPTIONS_]
+
+DESCRIPTION
+-----------
+picom is a compositor based on Dana Jansens' version of xcompmgr (which itself was written by Keith Packard). It includes some improvements over the original xcompmgr, like window frame opacity and inactive window transparency.
+
+OPTIONS
+-------
+*-h*, *--help*::
+	Get the usage text embedded in program code, which may be more up-to-date than this man page.
+
+*-r*, *--shadow-radius*=_RADIUS_::
+	The blur radius for shadows, in pixels. (defaults to 12)
+
+*-o*, *--shadow-opacity*=_OPACITY_::
+	The opacity of shadows. (0.0 - 1.0, defaults to 0.75)
+
+*-l*, *--shadow-offset-x*=_OFFSET_::
+	The left offset for shadows, in pixels. (defaults to -15)
+
+*-t*, *--shadow-offset-y*=_OFFSET_::
+	The top offset for shadows, in pixels. (defaults to -15)
+
+*-I*, *--fade-in-step*=_OPACITY_STEP_::
+	Opacity change between steps while fading in. (0.01 - 1.0, defaults to 0.028)
+
+*-O*, *--fade-out-step*=_OPACITY_STEP_::
+	Opacity change between steps while fading out. (0.01 - 1.0, defaults to 0.03)
+
+*-D*, *--fade-delta*=_MILLISECONDS_::
+	The time between steps in fade step, in milliseconds. (> 0, defaults to 10)
+
+*-c*, *--shadow*::
+	Enabled client-side shadows on windows. Note desktop windows (windows with __NET_WM_WINDOW_TYPE_DESKTOP_) never get shadow, unless explicitly requested using the wintypes option.
+
+[[fading]]*-f*, *--fading*::
+	Fade windows in/out when opening/closing and when opacity changes, unless *--no-fading-openclose* is used.
+
+[[inactive-opacity]]*-i*, *--inactive-opacity*=_OPACITY_::
+	Opacity of inactive windows. (0.1 - 1.0, defaults to 1.0). Using this option is discouraged, see the xref:_window_rules[*WINDOW RULES*] section for the recommended way to set window-specific opacity.
+
+*-e*, *--frame-opacity*=_OPACITY_::
+	Opacity of window titlebars and borders. (0.1 - 1.0, disabled by default)
+
+*-b*, *--daemon*::
+	Daemonize process. Fork to background after initialization. This option can only be set from the command line, setting this in the configuration file will have no effect.
+
+*--log-level*::
+	Set the log level. Possible values are "TRACE", "VERBOSE", "DEBUG", "INFO", "WARN", "ERROR", in increasing level of importance. Case doesn't matter. If using the "TRACE" log level, it's better to log into a file using *--log-file*, since it can generate a huge stream of logs.
+
+*--log-file*::
+	Set the log file. If *--log-file* is never specified, logs will be written to stderr. Otherwise, logs will to written to the given file, though some of the early logs might still be written to the stderr. When setting this option from the config file, it is recommended to use an absolute path.
+
+*--show-all-xerrors*::
+	Show all X errors (for debugging).
+
+*--config* _PATH_::
+	Look for configuration file at the path. See xref:_configuration_files[*CONFIGURATION FILES*] section below for where picom looks for a configuration file by default. Use `/dev/null` to avoid loading configuration file.
+
+*--write-pid-path* _PATH_::
+	Write process ID to a file. It is recommended to use an absolute path.
+
+*--plugins* _PATH_::
+	Specify plugins to load. Plugins will first be searched in current working directory (unless specified in the config file, in which case this step is skipped), then in `$XDG_CONFIG_HOME/picom/plugins`, then in `$XDG_CONFIG_DIRS/picom/plugins`. If all of the above fail, the plugin name is passed directly to the dynamic loader. Can be specified multiple times to load more than one plugins.
+
+[[shadow-color]]*--shadow-color* _STRING_::
+	Color of shadow, as a hex string (e.g. _#000000_)
+
+*--shadow-red* _VALUE_::
+	Red color value of shadow (0.0 - 1.0, defaults to 0).
+
+*--shadow-green* _VALUE_::
+	Green color value of shadow (0.0 - 1.0, defaults to 0).
+
+*--shadow-blue* _VALUE_::
+	Blue color value of shadow (0.0 - 1.0, defaults to 0).
+
+[[inactive-opacity-override]]*--inactive-opacity-override*::
+	Let inactive opacity set by *-i* override the __NET_WM_WINDOW_OPACITY_ values of windows. Using this is discouraged, see the xref:_window_rules[*WINDOW RULES*] section for the recommended way to set window-specific opacity.
+
+[[active-opacity]]*--active-opacity* _OPACITY_::
+	Default opacity for active windows. (0.0 - 1.0, defaults to 1.0). Using this is discouraged, see the xref:_window_rules[*WINDOW RULES*] section for the recommended way to set window-specific opacity.
+
+[[inactive-dim]]*--inactive-dim* _VALUE_::
+	Dim inactive windows. (0.0 - 1.0, defaults to 0.0). Using this option is discouraged, see the xref:_window_rules[*WINDOW RULES*] section for the recommended way to set window-specific dim levels.
+
+[[corner-radius]]*--corner-radius* _VALUE_::
+	Sets the radius of rounded window corners. When > 0, the compositor will round the corners of windows. Does not interact well with *--transparent-clipping*. (defaults to 0).
+
+[[corner-radius-rules]]*--corner-radius-rules* _RADIUS_:__CONDITION__::
+	Specify a list of corner radius rules. Overrides the corner radii of matching windows. This option takes precedence over the *--rounded-corners-exclude* option, and also overrides the default exclusion of fullscreen windows. The condition has the same format as *--opacity-rule*. Using this is discouraged, see the xref:_window_rules[*WINDOW RULES*] section for the recommended way to set window-specific corner radius.
+
+[[rounded-corners-exclude]]*--rounded-corners-exclude* _CONDITION_::
+	Exclude conditions for rounded corners. Using this is discouraged, see the xref:_window_rules[*WINDOW RULES*] section for the recommended way to set window-specific corner radius.
+
+*--no-frame-pacing*::
+	Disable vsync-aware frame pacing. By default, the compositor tries to make sure it only renders once per vblank interval, and also the render happens as late as possible to minimize the latency from updates to the screen. However this can sometimes cause stuttering, or even lowered frame rate. This option can be used to disable frame pacing.
+
+[[mark-wmwin-focused]]*--mark-wmwin-focused*::
+	Try to detect WM windows (a non-override-redirect window with no child that has _WM_STATE_) and mark them as active. Using this is discouraged, see the xref:_window_rules[*WINDOW RULES*] section for the recommended way to set window-specific rules.
+
+[[mark-ovredir-focused]]*--mark-ovredir-focused*::
+	Mark override-redirect windows that doesn't have a child window with _WM_STATE_ focused. Using this is discouraged, see the xref:_window_rules[*WINDOW RULES*] section for the recommended way to set window-specific rules.
+
+*--no-fading-openclose*::
+	Do not fade on window open/close.
+
+*--no-fading-destroyed-argb*::
+	Do not fade destroyed ARGB windows with WM frame. Workaround of bugs in Openbox, Fluxbox, etc.
+
+[[shadow-ignore-shaped]]*--shadow-ignore-shaped*::
+	Do not paint shadows on shaped windows. Note shaped windows here means windows setting its shape through X Shape extension. Those using ARGB background is beyond our control. Deprecated, see the xref:_window_rules[*WINDOW RULES*] section for the recommended way to set window-specific shadow.
+
+[[detect-rounded-corners]]*--detect-rounded-corners*::
+	Try to detect windows with rounded corners and don't consider them shaped windows. The accuracy is not very high, unfortunately.
+
+*--detect-client-opacity*::
+	Detect _pass:[_]NET_WM_WINDOW_OPACITY_ on client windows, useful for window managers not passing _pass:[_]NET_WM_WINDOW_OPACITY_ of client windows to frame windows.
+
+*--vsync*, *--no-vsync*::
+	Enable/disable VSync.
+
+*--use-ewmh-active-win*::
+	Use EWMH __NET_ACTIVE_WINDOW_ to determine currently focused window, rather than listening to 'FocusIn'/'FocusOut' event. Might have more accuracy, provided that the WM supports it.
+
+*--unredir-if-possible*::
+	Unredirect all windows in some cases. Known to cause flickering when redirecting/unredirecting windows. Currently, unredirecting is triggered by following conditions:
+	    * If the top level window is taking up the entire screen. In multi-monitor setup, this means ALL monitors.
+	    * If there is no window.
+	    * If a window is fullscreen according to its WM hints. (can be disabled with *--no-ewmh-fullscreen*).
+	    * If a window requests to bypass the compositor (__NET_WM_BYPASS_COMPOSITOR_).
+	Windows are also unredirected unconditionally when monitors are powered off, regardless if *--unredir-if-possible* is set.
+
+
+*--unredir-if-possible-delay* _MILLISECONDS_::
+	Delay before unredirecting the window, in milliseconds. Defaults to 0.
+
+[[unredir-if-possible-exclude]]*--unredir-if-possible-exclude* _CONDITION_::
+	Conditions of windows that shouldn't be considered full-screen for unredirecting screen. Using this is discouraged, see the xref:_window_rules[*WINDOW RULES*] section for the recommended way to set window-specific unredirect.
+
+[[shadow-exclude]]*--shadow-exclude* _CONDITION_::
+	Specify a list of conditions of windows that should have no shadow. Using this is discouraged, see the xref:_window_rules[*WINDOW RULES*] section for the recommended way to set window-specific shadow.
+
+[[clip-shadow-above]]*--clip-shadow-above* _CONDITION_::
+	Specify a list of conditions of windows that should have no shadow painted over, such as a dock window. Using this is discouraged, see the xref:_window_rules[*WINDOW RULES*] section for the recommended way to set window-specific shadow clipping.
+
+[[fade-exclude]]*--fade-exclude* _CONDITION_::
+	Specify a list of conditions of windows that should not be faded. Using this is discouraged, see the xref:_window_rules[*WINDOW RULES*] section for the recommended way to set window-specific fading.
+
+[[focus-exclude]]*--focus-exclude* _CONDITION_::
+	Specify a list of conditions of windows that should always be considered focused. Using this is discouraged, see the xref:_window_rules[*WINDOW RULES*] section for the recommended way for doing this.
+
+*--inactive-dim-fixed*::
+	Use fixed inactive dim value, instead of adjusting according to window opacity.
+
+[[detect-transient]]*--detect-transient*::
+	Use _WM_TRANSIENT_FOR_ to group windows, and consider windows in the same group focused at the same time.
+
+[[detect-client-leader]]*--detect-client-leader*::
+	Use _WM_CLIENT_LEADER_ to group windows, and consider windows in the same group focused at the same time. This usually means windows from the same application will be considered focused or unfocused at the same time. _WM_TRANSIENT_FOR_ has higher priority if *--detect-transient* is enabled, too.
+
+*--blur-method*, *--blur-size*, *--blur-deviation*, *--blur-strength*::
+	Parameters for background blurring, see the xref:_blur[*BLUR*] section for more information.
+
+*--blur-background*::
+	Blur background of semi-transparent / ARGB windows. Bad in performance, with driver-dependent behavior. The name of the switch may change without prior notifications.
+
+*--blur-background-frame*::
+	Blur background of windows when the window frame is not opaque.  Implies *--blur-background*. Bad in performance, with driver-dependent behavior. The name may change.
+
+*--blur-background-fixed*::
+	Use fixed blur strength for a window during fading. This only applies to the *--fading* option, and will be a no-op if animation scripts are used.
+
+*--blur-kern* _MATRIX_::
+	Specify the blur convolution kernel, with the following format:
++
+----
+WIDTH,HEIGHT,ELE1,ELE2,ELE3,ELE4,ELE5...
+----
++
+In other words, the matrix is formatted as a list of comma separated numbers. The first two numbers must be integers, which specify the width and height of the matrix. They must be odd numbers. Then, the following `width * height - 1` numbers specifies the numbers in the matrix, row by row, excluding the center element.
++
+The elements are finite floating point numbers. The decimal pointer has to be _._ (a period), scientific notation is not supported.
++
+The element in the center will either be 1.0 or varying based on opacity, depending on whether you have *--blur-background-fixed*. Yet the automatic adjustment of blur factor may not work well with a custom blur kernel.
++
+A 7x7 Gaussian blur kernel (sigma = 0.84089642) looks like:
++
+----
+--blur-kern '7,7,0.000003,0.000102,0.000849,0.001723,0.000849,0.000102,0.000003,0.000102,0.003494,0.029143,0.059106,0.029143,0.003494,0.000102,0.000849,0.029143,0.243117,0.493069,0.243117,0.029143,0.000849,0.001723,0.059106,0.493069,0.493069,0.059106,0.001723,0.000849,0.029143,0.243117,0.493069,0.243117,0.029143,0.000849,0.000102,0.003494,0.029143,0.059106,0.029143,0.003494,0.000102,0.000003,0.000102,0.000849,0.001723,0.000849,0.000102,0.000003'
+----
++
+May also be one of the predefined kernels: `3x3box` (default), `5x5box`, `7x7box`, `3x3gaussian`, `5x5gaussian`, `7x7gaussian`, `9x9gaussian`, `11x11gaussian`. All Gaussian kernels are generated with sigma = 0.84089642 . If you find yourself needing to generate custom blur kernels, you might want to try the new blur configuration (see the xref:_blur[*BLUR*] section).
+
+[[blur-background-exclude]]*--blur-background-exclude* _CONDITION_::
+	Exclude conditions for background blur.
+
+[[invert-color-include]]*--invert-color-include* _CONDITION_::
+	Specify a list of conditions of windows that should be painted with inverted color. Resource-hogging, and is not well tested. Using this is discouraged, see the xref:_window_rules[*WINDOW RULES*] section for the recommended way to do this.
+
+[[opacity-rule]]*--opacity-rule* _OPACITY_:__CONDITION__::
+	Specify a list of opacity rules, in the format `PERCENT:PATTERN`, like `50:name pass:[*]= "Firefox"`. picom-trans is recommended over this. Note we don't make any guarantee about possible conflicts with other programs that set _pass:[_]NET_WM_WINDOW_OPACITY_ on frame or client windows. Using this is discouraged, see the xref:_window_rules[*WINDOW RULES*] section for the recommended way to set window-specific opacity.
+
+*--crop-shadow-to-monitor*::
+	Crop shadow of a window fully on a particular monitor to that monitor. This is currently implemented using the X RandR extension.
+
+*--backend* _BACKEND_::
+	Specify the backend to use: `xrender` or `glx`. `xrender` is the default one.
++
+--
+* `xrender` backend performs all rendering operations with X Render extension. It is what `xcompmgr` uses, and is generally a safe fallback when you encounter rendering artifacts or instability.
+* `glx` (OpenGL) backend performs all rendering operations with OpenGL. It is more friendly to some VSync methods, and has significantly superior performance on color inversion (*--invert-color-include*) or blur (*--blur-background*). It requires proper OpenGL 3.3 support from your driver and hardware. You may wish to look at the GLX performance optimization options below. *--xrender-sync-fence* might be needed on some systems to avoid delay in changes of screen contents.
+--
+
+*--no-use-damage*::
+	Disable the use of damage information. This cause the whole screen to be redrawn every time, instead of the part of the screen has actually changed. Potentially degrades the performance, but might fix some artifacts.
+
+*--xrender-sync-fence*::
+	Use X Sync fence to sync clients' draw calls, to make sure all draw calls are finished before picom starts drawing. Needed on nvidia-drivers with GLX backend for some users.
+
+*--force-win-blend*::
+	Force all windows to be painted with blending. Useful if you have a window shader that could turn opaque pixels transparent.
+
+*--dbus*::
+	Enable remote control via D-Bus. See the xref:_d_bus_api[*D-BUS API*] section below for more details.
+
+*--benchmark* _CYCLES_::
+	Benchmark mode. Repeatedly paint until reaching the specified cycles.
+
+*--benchmark-wid* _WINDOW_ID_::
+	Specify window ID to repaint in benchmark mode. If omitted or is 0, the whole screen is repainted.
+
+*--no-ewmh-fullscreen*::
+	Do not use EWMH to detect fullscreen windows. Reverts to checking if a window is fullscreen based only on its size and coordinates.
+
+*--max-brightness*::
+	Dimming bright windows so their brightness doesn't exceed this set value. Brightness of a window is estimated by averaging all pixels in the window, so this could comes with a performance hit. Setting this to 1.0 disables this behaviour. Requires *--use-damage* to be disabled. (default: 1.0)
+
+*--transparent-clipping*::
+	Make transparent windows clip other windows like non-transparent windows do, instead of blending on top of them.
+
+*--transparent-clipping-exclude* _CONDITION_::
+	Specify a list of conditions of windows that should never have transparent clipping applied. Useful for screenshot tools, where you need to be able to see through transparent parts of the window.
+
+*--window-shader-fg* _SHADER_::
+	Specify GLSL fragment shader path for rendering window contents. Shader is searched first relative to the directory the configuration file is in, then in the usual places for a configuration file. See section xref:_shader_interface[*SHADER INTERFACE*] below for more details on the interface.
+
+[[window-shader-fg-rule]]*--window-shader-fg-rule* _SHADER_:__CONDITION__::
+	Specify GLSL fragment shader path for rendering window contents using patterns. Similar to *--opacity-rule*, arguments should be in the format of _SHADER:CONDITION_, e.g. "shader.frag:name = 'window'". Leading and trailing whitespaces in _SHADER_ will be trimmed. If _SHADER_ is "default", then the default shader will be used for the matching windows. (This also unfortunately means you can't use a shader file named "default"). Using this is discouraged, see the xref:_window_rules[*WINDOW RULES*] section for the recommended way to set window-specific shaders.
+
+*--root-pixmap-shader* _SHADER_::
+	Specify GLSL fragment shader path for rendering the root pixmap. The root pixmap usually is your desktop wallpaper, though for some desktop environment this is not the case. Shader is searched first relative to the directory the configuration file is in, then in the usual places for a configuration file. See section xref:_shader_interface[*SHADER INTERFACE*] below for more details on the interface.
+
+*--dithered-present*::
+	Use higher precision during rendering, and apply dither when presenting the rendered screen. Reduces banding artifacts, but might cause performance degradation. Only works with OpenGL.
+
+WINDOW RULES
+------------
+Window rules allow you to set window-specific options which can be used to change appearance of windows based on certain conditions. Note there are other options that also cover some of the functionality of window rules, but window rules are more flexible and powerful. If you are creating a fresh configuration file, it is recommended to use window rules instead of the other options.
+
+Following is a list of all the options that are superseded by window rules:
+
+<<shadow-ignore-shaped>>, <<inactive-opacity>>, <<active-opacity>>, <<inactive-opacity-override>>, <<inactive-dim>>, <<mark-wmwin-focused>>, <<mark-ovredir-focused>>, <<invert-color-include>>, <<shadow-exclude>>, <<fade-exclude>>, <<focus-exclude>>, <<rounded-corners-exclude>>, <<blur-background-exclude>>, <<opacity-rule>>, <<corner-radius-rules>>, <<window-shader-fg-rule>>, <<clip-shadow-above>>. As well as the xref:wintypes[*wintypes*] configuration file option.
+
+If window rules option is used, none of the above options will have any effect. And warning messages will be issued. When the window rules option is used, the compositor will also behave somewhat differently in certain cases. One such case is that fullscreen windows will no longer have their rounded corners disabled by default.
+
+If you are currently using some of these options and want to switch to window rules, or if you want to keep the existing behavior, see the xref:_migrating_old_rules[*Migrating old rules*] section for how to convert them.
+
+=== Syntax
+
+Window rules are only available in the configuration file. To set window rules, set the `rules` option in the configuration file to something like this:
+
+[listing]
+rules = (
+	{ match = "focused"; opacity = 1; },
+	{ match = "name = 'firefox'"; shadow = true; },
+	# ... and so on
+)
+
+
+`rules = ( ... )` sets the option to a list, which can contain multiple sub-items. For `rules`, each sub-item must be a group (i.e. `{ key = value; ... }`), representing a condition and a set of options to apply when the condition is met. These sub-items are matched in the order they appear in the configuration file, options are applied as the conditions are matched. If the same option is set multiple times, the last one will take effect.
+
+Within each sub-item, these keys are available: ::
+
+  match:::
+	The condition string to match windows with. See the xref:_format_of_conditions[*FORMAT OF CONDITIONS*] section below for the syntax of condition strings. If not specified, the rule will always match.
+
+  shadow:::
+	Whether to draw shadow under the matching window.
+
+  full-shadow:::
+	Controls whether shadow is drawn under the parts of the window that you normally won't be able to see. Useful when the window has parts of it transparent, and you want shadows in those areas.
+
+  shadow-color:::
+	Color of the shadow. Same syntax as <<shadow-color>>.
+
+  fade:::
+	Whether to fade the matching window in/out when opening/closing it. When animations are used, this will have no effect. This can only be used to disable fading animations enabled by option <<fading>>.
+
+  opacity:::
+	Opacity of the matching window. (0.0 - 1.0). If not explicitly set by a rule, the opacity value from the window properties (e.g. pass:[_]NET_WM_WINDOW_OPACITY) will be used.
+
+  blur-opacity:::
+	Opacity of the background blur. (0.0 - 1.0). If not explicitly set by a rule, this will be 1.0. Ignored by `blur-background` is not enabled.
+
+  dim:::
+	Dim level of the matching window. Larger value means more dimming. (0.0 - 1.0)
+
+  corner-radius:::
+	Corner radius of the matching window in number of pixels. 0 means no corner rounding.
+
+  blur-background:::
+	Whether the background of the matching window should be blurred.
+
+  invert-color:::
+	Whether to invert the color of the matching window.
+
+  clip-shadow-above:::
+	Whether to prevent the matching window from being painted over by shadows.
+
+  unredir:::
+	Whether the matching window should cause the compositor to unredirect the screen, and whether it should trigger the screen to be redirected again if it is currently unredirected. This could be a boolean value, if _true_, the screen will be unredirected if the matching window meets certain conditions; if _false_, it will never cause the screen to be unredirected. If the screen is currently unredirected, and there is no other window that will trigger unredirection, both of these choices will cause the screen to be redirected again. To control that behavior as well, you can set `unredir` to either _preferred_, such windows will not cause the screen to be redirected in this situation, and will behave like `true` otherwise; or _passive_, which not only won't cause redirection in this case, but also won't actively cause the screen to be unredirected. The last possible value for this option is _forced_, any of the windows having their `unredir` set to `forced` will cause the screen to be unredirected unconditionally. The value of the _pass:[_]NET_WM_BYPASS_COMPOSITOR_ property on the window will be considered iff `unredir` is not explicitly set by any rule.
+
+  transparent-clipping:::
+	Whether to make the matching window clip other windows like opaque windows do, instead of blending on top of them. When applied to transparent windows, this means nothing will be painted under the transparent parts of the window, essentially cuts a hole in the screen.
+
+  shader:::
+	GLSL fragment shader specification for rendering window contents. See section xref:_shader_interface[*SHADER INTERFACE*] below for more details on the interface. This option can be a simple path to the shader file, but it's also possible to specify extra options to the shader. Currently, the only extra options supported are macro defines. Syntax:
++
+----
+shader = {
+	path = "path/to/shader.glsl";
+	defines = {
+		COLOR = "vec4(1.0, 0.0, 0.0, 1.0)";
+	};
+};
+----
++
+This will prepend `#define COLOR vec4(1.0, 0.0, 0.0, 1.0)` to your shader (note the lack of double quotes). The value of a define MUST be a string, any string will be accepted and no sanitization is performed.
+
+  [[window-rules-animations]]animations:::
+	Define window-specific animation scripts. The format of this option is the same as the top-level _animations_ option. You can find more information in the xref:_animations[*ANIMATIONS*] section. If animation scripts are defined in multiple matching rules, they will be merged together. If multiple matching rules contain animation scripts for the same trigger, the last one will take effect, the same as other options.
+
+=== Migrating old rules
+
+Most of the rule options should 1:1 map to the new window rules. Here is a list of the non-trivial ones and how to achieve the same effect with window rules.
+
+*Inactive dimming and opacity*:: This includes options <<inactive-opacity>>, <<inactive-dim>>, <<active-opacity>>,
+<<inactive-opacity-override>>, <<mark-wmwin-focused>>, and <<mark-ovredir-focused>>. When using the window rules, the compositor no longer have an "active window" concept, as it is easy to achieve with window rules. You can use `match = "focused || group_focused"` to match windows that would have been considered active with the old options. Then you can set the opacity and dim level for matched windows accordingly. <<mark-wmwin-focused>> and <<mark-ovredir-focused>> can be achieved by adding `|| wmwin` and `|| override_redirect` to the match string, respectively. <<inactive-opacity-override>> can be achieved by setting `opacity-override = true`.
++
+NOTE: Setting _opacity_ explicitly with a rule will override the opacity value from the window properties (i.e. _pass:[_]NET_WM_WINDOW_OPACITY_), which is used by tools like `picom-trans` for setting the opacity of window. If you would like to keep using tools like `picom-trans`, you can choose to set the opacity only for windows without the opacity property by matching `! _NET_WM_WINDOW_OPACITY`.
+
+*Active window*:: This includes option <<focus-exclude>>. This option was only used to influence what windows are considered active, to apply inactive opacity and dimming. Since with window rules you no longer need the compositor to help you decide what is active and what is not (see above), this option is no longer needed.
+
+*Rounded corners and fullscreen windows*:: Rounded corners are no longer automatically disabled for fullscreen windows. If you want to disable rounded corners for fullscreen windows, you can use the following rule:
++
+----
+rules = (
+	{ match = "fullscreen"; corner-radius = 0; },
+)
+----
+
+FORMAT OF CONDITIONS
+--------------------
+Some options accept a condition string to match certain windows. A condition string is formed by one or more conditions, joined by logical operators.
+
+Formal grammar for a condition looks like this:
+
+	Condition <- Term ('||' Term)*
+	Term <- Item ('&&' Item)*
+	Item <- '!'? Target '@'? ('[' Index ']')? (Operator Pattern)? | '(' Condition ')'
+
+Concretely speaking, a condition is a sequence of one or more simple pattern matching __Item__s, joined by logical operators `&&` (and) and `||` (or). `&&` has higher precedence than `||`. Both operators are left-associative. Parentheses can be used to raise precedence. If an _Item_ has a leading negation operator (`!`), the result of the item is negated.
+
+Inside an _Item_:
+
+_Target_:: is either a predefined target name, or the name of a window property to match.
+
+Supported predefined targets are: :::
+
+  `x`, `y`, `x2`, `y2`::::
+	Window coordinates, from the top-left corner of the window `(x, y)` to the bottom-right corner `(x2, y2)`.
+
+  `width`, `height`::::
+	Size of the window.
+
+  `widthb`, `heightb`::::
+	Like `width` and `height`, but including the window border.
+
+  `border_width`::::
+	Width of the window border.
+
+  `fullscreen`::::
+	Whether the window is fullscreen. If *--no-ewmh-fullscreen* is set, this is determined by the window size and position; otherwise, it is determined by the _pass:[_]NET_WM_STATE_FULLSCREEN_ property.
+
+  `override_redirect`::::
+	Whether the window is override-redirect.
+
+  `argb`::::
+	Whether the window has an ARGB visual.
+
+  `focused`::::
+	Whether the window is focused.
+
+  `group_focused`::::
+	Whether the window is in the same window group as the focused window. This requires <<detect-transient>> or <<detect-client-leader>>.
+
+  `wmwin`::::
+	Whether the window looks like a WM window, i.e. has no client window and is not override-redirected.
+
+  [[c2-bounding-shaped]]`bounding_shaped`::::
+	Whether the window has a bounding shape.
+
+  `rounded_corners`::::
+	Whether the window bounding shape only has rounded corners, and is otherwise rectangular. This implies <<c2-bounding-shaped>>. Requires <<detect-rounded-corners>>. This has no relation to <<corner-radius>>.
+
+  `window_type`::::
+	Window type, as defined by _pass:[_]NET_WM_WINDOW_TYPE_. Name only, e.g. _normal_ means _pass:[_]NET_WM_WINDOW_TYPE_NORMAL_. Because a window can have multiple types, testing for equality succeeds if any of the window's types match.
+
+  `name`::::
+	Name of the window. This is either _pass:[_]NET_WM_NAME_ or _pass:[_]WM_NAME_.
+
+  `class_i`, `class_g`::::
+	Instance and general class of the window. This is the first and second value of _pass:[_]WM_CLASS_, respectively.
+
+  `role`::::
+	Window role. This is the value of _pass:[_]WM_WINDOW_ROLE_.
+
+  `urgent`::::
+	Whether the window is expecting immediate user action, as defined by the ICCCM. This only checks if the urgency bit is set in _WM_HINTS_. Interpretation of this bit varies among applications and window managers. Some of them also sets _pass:[_]NET_WM_STATE_DEMANDS_ATTENTION_ in _pass:[_]NET_WM_STATE_ to indicate urgency, so you might want to also check that (e.g. `_NET_WM_STATE@[*] = '_NET_WM_STATE_DEMANDS_ATTENTION'`).
+
++
+_Target_ can be followed by an optional `@` if the window attribute should be be looked up on client window. Otherwise the frame window will be used.
+
+_Index_:: is the index number of the property to look up. For example, `[2]` returns the third value of the property. If not specified, the first value (index `[0]`) is used implicitly. Use the special value `[*]` to perform matching against all available property values using logical OR. None of the predefined targets have multiple values, so do not use this with them.
+
+_Operator_ and _Pattern_:: define how _Target_ will be matched. They can be omitted together, in which case the existence of the window property is checked when _Target_ is not a predefined target; for a predefined _Target_, omitting _Operator_ and _Pattern_ is equivalent to writing `!= 0`.
++
+Available operators change depends on the type of _Target_ being matched. If the target is a number, the operators are `=`, `>`, `<`, `>=`, `pass:[<=]`, as well as their negation, obtained by prefixing the operator with `!` (e.g. `!=`, `!>`, etc.). If the target is a string, the operators are `=` (strict equal), `pass:[*]=` (substring match), `^=` (starts with), `%=` (match with glob), `~=` (match with regex), as well as their case insensitive variants `?=`, `pass:[*]?=`, `^?=`, `%?=`, `~?=`. String operators can be negated by prefixing the operator with `!` as well (e.g. `!=`, `!pass:[*]=`, etc.).
++
+_Pattern_ is either an integer or a string enclosed by single or double quotes. Python-3-style escape sequences are supported for strings. Boolean values are interpreted as integers, i.e. writing `true` is equivalent to `1`, and `false` `0`.
+
+Examples:
+
+	# If the window is focused
+	focused
+	focused = 1
+	# If the window is not override-redirected
+	!override_redirect
+	override_redirect = false
+	override_redirect != true
+	override_redirect != 1
+	# If the window is a menu
+	window_type *= "menu"
+	_NET_WM_WINDOW_TYPE@ *= "MENU"
+	# If the window is marked hidden: _NET_WM_STATE contains _NET_WM_STATE_HIDDEN
+	_NET_WM_STATE@[*] = "_NET_WM_STATE_HIDDEN"
+	# If the window is marked sticky: _NET_WM_STATE contains an atom that contains
+	# "sticky", ignore case
+	_NET_WM_STATE@[*] *?= "sticky"
+	# If the window name contains "Firefox", ignore case
+	name *?= "Firefox"
+	_NET_WM_NAME@ *?= "Firefox"
+	# If the window name ends with "Firefox"
+	name %= "*Firefox"
+	name ~= "Firefox$"
+	# If the window has a property _COMPTON_SHADOW with value 0, type CARDINAL,
+	# format 32, value 0, on its frame window
+	_COMPTON_SHADOW = 0
+	# If the third value of _NET_FRAME_EXTENTS is less than 20, or there's no
+	# _NET_FRAME_EXTENTS property on client window
+	_NET_FRAME_EXTENTS@[2] < 20 || !_NET_FRAME_EXTENTS@
+	# The pattern here will be parsed as "dd4"
+	name = "\x64\x64\o64"
+	# These two are equivalent
+	name = 'Firefox' || name = 'Chromium' && class_i = 'Navigator'
+	name = 'Firefox' || (name = 'Chromium' && class_i = 'Navigator')
+
+ANIMATIONS
+----------
+
+picom supports xref:fading[fading] animation when you open or close a window. In addition to that, picom also has a very powerful animation script system, which can be used to animate many aspects of a window based on certain triggers. Animation scripts can be defined in your configuration file by setting the option _animations_. It is also possible to define animations per-window using the xref:_window_rules[*WINDOW RULES*] system, by setting the <<window-rules-animations>> option in a rule. (Read the rest of this section first before you go there.)
+
+The basic syntax of the _animations_ option is as follows:
+
+----
+animations = ({
+	triggers = [ ... ];
+	suppressions = [ ... ];
+
+	# more options follow
+	...
+}, {
+	# another animation script
+}, ...)
+----
+
+`animations = ( ... )` sets _animations_ to a list, which can contain multiple sub-items, each item is an animation script. An animation script is a group containing multiple entries (i.e. `{ key = value; ... }`). All animation scripts share some common options, like _triggers_ and _suppressions_, they also contain more options that either defines the actual animation, or selects an animation preset.
+
+=== Common options
+
+  _triggers_:::
+	A list of triggers specifying when this animation should be started. Each trigger can have at most one animation script associated to it, otherwise the behavior is undefined, and a warning will be issued.
+
+	Valid triggers are: ::::
+
+	  _open_:: When a window is opened.
+
+	  _close_:: When a window is closed.
+
+	  _show_:: When a minimized or iconified window is shown.
+
+	  _hide_:: When a window is minimized or iconified.
+
+	  _increase-opacity_:: When the opacity or the blur opacity of a window is increased. If the opacity and the blur opacity changed in different directions, the opacity change takes precedence.
+
+	  _decrease-opacity_:: When the opacity or the blur opacity of a window is decreased. If the opacity and the blur opacity changed in different directions, the opacity change takes precedence.
+
+	  _size_, _position_:: When the size or position of a window is changed. If both changed, the size trigger has priority. (EXPERIMENTAL)
+
+	  _color_:: When some color property of a window is changed. Right now this only includes _shadow-color_.
+
+	  [[trigger-geometry]]_geometry_:: Alias of size + position.
++
+WARNING: The _size_ and _position_ triggers are experimental. Using this means you accept the caveat that these animations will also trigger when you manually resize or move a window, like when you drag the window around with your mouse.
+
+  _suppressions_:::
+	Which other animations should be suppressed when this animation is running. Normally, if another trigger is activated while an animation is already running, the animation in progress will be interrupted and the new animation will start. If you want to prevent this, you can set the `suppressions` option to a list of triggers that should be suppressed. This is optional, the default value for this is an empty list.
+
+=== Presets
+
+Defining an animation is a bit involved. To make animations more approachable, without you having to learn the nitty-gritty details of the script system, picom provides a number of presets that you can use by just specifying a handful of options.
+
+To choose a preset, add a _preset_ option to an animation script group, like this:
+
+----
+animations = ({
+	triggers = [ "close", "hide" ];
+	preset = "slide-out";
+	direction = "down";
+	...
+}, ...)
+----
+
+Some presets have additional options that you can set to customize the animation. In this example, the _slide-out_ preset has a _direction_ option specifying the direction of the sliding animation.
+
+ifndef::env-web[]
+NOTE: Describing animations with only words is difficult. We have short video clips showing off each preset, but sadly they cannot be included in this manpage. The web version of this document hosted on our website at https://picom.app[] on the other hand, does have those clips.
+endif::[]
+
+The following presets are available: ::
++
+_slide-in_, _slide-out_:::
++
+Show/hide the window with a sliding animation.
++
+--
+ifdef::env-web[]
+video::assets/slide.mp4[width=400]
+endif::[]
+--
++
+--
+*Options*:::
+
+  _direction_:: The sliding direction, valid values are _up_, _down_, _left_, _right_.
+
+  _duration_:: Duration of the animation in seconds. (Can be fractional).
+--
++
+_fly-in_, _fly-out_:::
++
+Show/hide the window with a flying animation.
++
+--
+ifdef::env-web[]
+video::assets/fly.mp4[width=400]
+endif::[]
+--
++
+--
+*Options*:::
+
+  _direction_:: The flying direction, valid values are _up_, _down_, _left_, _right_.
+
+  _duration_:: Duration of the animation in seconds.
+--
++
+_appear_, _disappear_:::
++
+Show/hide the window with a combination of scaling and fading.
++
+--
+ifdef::env-web[]
+video::assets/appear.mp4[width=400]
+endif::[]
+--
++
+--
+*Options*:::
+
+  _scale_:: The scaling factor of the window, 1.0 means no scaling.
+
+  _duration_:: Duration of the animation in seconds.
+--
++
+_geometry-change_:::
++
+Animate the geometry (i.e. size and position) change of the window.
++
+WARNING: This makes use of both the <<trigger-geometry>> trigger, and the <<saved-image-blend>> output variable. Both of these features are experimental and may not work as expected.
++
+--
+ifdef::env-web[]
+video::assets/geometry-change.mp4[width=400]
+endif::[]
+--
++
+--
+*Options*:::
+
+  _duration_:: Duration of the animation in seconds.
+--
+
+=== Advanced
+
+If the existing presets don't meet your needs, it is always possible to define your own animations. To put it simply, an animation script is just a collection of variables, and how their values should be computed. Animation scripts, when running, are evaluated once per frame, and the values of some of the variables are then used to animate the window.
+
+--
+
+*Basic syntax*
+
+To concretely illustrate what the above means, here is an example:
+
+----
+# this animation script does nothing to your windows by the way.
+animations = ({
+	# common options, these are not part of the collection of variables
+	triggers = [ "open" ];
+
+	# variables
+	a = 10;
+	b = "a * 10";
+	c = "a + b";
+	d = {
+		curve = "cubic-bezier(0.25, 0.1, 0.25, 1.0)";
+		duration = 0.5;
+		delay = 0;
+		start = 0;
+		end = 1;
+	};
+
+	# more options follow
+	# ...
+}, ...)
+----
+
+A variable can be defined as a number, an expression, or a timing function. In the example above, _a_ is defined to be a number (10), _b_ is defined to be the result of the expression `a * 10`, and _c_ similarly. Expression used to define one variable can refer to other variables in the same script. This is how you can create complex animations. Where the variables are defined in the script does not matter, as long as no circular references exist.
+
+NOTE: Because variable names can contain dashes (`-`), minus signs in expressions must be surrounded by spaces. For example, `a - 10` means `a` minus `10`, whereas `a-10` is a variable named `a-10`.
+
+_d_ is a timing function, which is a group with several options specifying its behavior. Timing functions are what drives an animation. If no timing function is defined in an animation script, nothing will be animated and the animation will end instantly.
+
+These options are valid for a timing function: :::
+
+  _curve_:: Type of the curve and its parameters. It can be _linear_, which takes no parameters and defines a linear curve; or _cubic-bezier_, which takes four parameters for the four control points of the cubic bezier curve; or _steps_, which takes one or two parameters, the first is the number of steps, the second is the "jumpterm", which can be _jump-start_, _jump-end_, _jump-none_, or _jump-both_. The _curve_ option is optional, is not specified, the linear curve will be used.
+
+  _delay_:: The number of seconds to wait before the value starts changing. Optional, defaults to 0.
+
+  _duration_:: The number of seconds it will take for the value to go from _start_ to _end_ once it starts changing. Mandatory. And must be greater than 0.
+
+  _start_:: The start value of the variable. Mandatory.
+
+  _end_:: The end value of the variable. Mandatory.
+
+All options except _curve_ can be set to expressions. Timing function options are not variables themselves.
+
+NOTE: If any of _delay_, _duration_, _start_, or _end_ is defined with an expression, the expression will be evaluated only once when the animation starts. The values of _delay_, _duration_, _start_, and _end_ will then be fixed for the duration of the animation.
+
+The total duration of an animation is determined by the duration of the timing function with the longest duration. The animation will end when the longest timing function ends. Once an animation ends, its effects on the window will be removed.
+
+There isn't any restriction on what you can name the variables. Obviously they cannot conflict with the names of common options (_triggers_, _suppressions_, and _preset_), but other than that, you can name them whatever you want as long as libconfig allows it. Some variable names have special meanings as we will see below.
+--
+
+--
+*Output variables*
+
+Now you know how to write an animation script. But what we just wrote doesn't actually do anything to the window. To animate a window, we define a set of special variable names which we will call "output variables". If you define variables with these names, their values will be used to animate the window.
+
+For example, if you define an animation script like this:
+
+----
+animations = ({
+	triggers = [ "open" ];
+	offset-x = {
+		duration = 2;
+		start = 0;
+		end = 100;
+	};
+}, ...)
+----
+
+Then when a window opens, it will move 100 pixels to the right over the course of 2 seconds.
+
+WARNING: Although we did say you can name your variables whatever you want, if some of them become output variables in the future, your animation script will behave unexpectedly. To avoid this kind of problems, we reserve several classes of variable names which we will never use for special variables. These are: 1) any names that start with a single letter followed by a dash (e.g. `a-`, `b-`, etc.); 2) any names that start with `var-`, `tmp-`, or `user-`. If you need to define a non-output variable, use one of these names.
+
+Currently, these output variables are supported: :::
+
+  _offset-x_, _offset-y_:: The offset of the window in the X and Y direction, respectively. The window body will be moved by this amount. Note this does not affect the shadow, so if you define these but not _shadow-offset-x_ or _shadow-offset-y_, the shadow will remain where the window was without the animation.
+
+  _shadow-offset-x_, _shadow-offset-y_:: The offset of the shadow in the X and Y direction, respectively. The shadow will be moved by this amount. This offset applies *after* the window and the shadow has been scaled.
+
+  _opacity_:: The opacity of the window. This is a number between 0 and 1.
+
+  _blur-opacity_:: The opacity of the blur behind the window. This is a number between 0 and 1.
+
+  _shadow-opacity_:: The opacity of the shadow. This is a number between 0 and 1.
+
+  _shadow-red_, _shadow-green_, _shadow-blue_:: Color of the shadow. Each component is specified separately, each number is between 0 and 1.
+
+  _scale-x_, _scale-y_, _shadow-scale-x_, _shadow-scale-y_:: The scaling factor of the window and shadow in the X and Y direction, respectively. 1.0 means no scaling. The window body and the shadow are scaled independently. When they are scaled, the scale origin will be the top-left corner of the window, for *both* of them.
+
+  _crop-x_, _crop-y_, _crop-width_, _crop-height_:: These four values combined defines a rectangle on the screen. The window and its shadow will be cropped to this rectangle. If not defined, the window and shadow will not be cropped.
+
+  [[saved-image-blend]]_saved-image-blend_:: When the window's geometry changes, its content will often change drastically, creating a jarring discontinuity. This output variable allows you to blend the window's content before and after the geometry change, the before and after images will be stretched appropriately to match the animation. This way you can smoothly animated geometry changes. This is a number between 0 and 1. 0 means the saved image is not used, whereas 1 means you will only see the saved image. (EXPERIMENTAL)
++
+WARNING: The _saved-image-blend_ variable is experimental. It might work incorrectly, cause visual artifacts, or slow down your system. You are welcome to open an issue on GitHub if you encounter any problems to help us improve it, though resolution is not guaranteed.
+
+All coordinates are in pixels, and are in the coordinate system of the screen. Sizes are also in pixels.
+
+IMPORTANT: If an output variable name is not defined in your animation script, it will take the default value for whichever state the window is in. Specifically, if you don't define an _opacity_ variable in the animation script for the "close" or "hide" trigger, a closed window will, by default, have 0 opacity. So you will just see it disappear instantly. Oftentimes, you will want to set _opacity_ to 1 to make the window visible for the duration of the animation.
+--
+
+--
+*Context variables*
+
+Now you know how to animate a window. But this is still not powerful enough to support most animations you might want to define. For example, if you want your window to fly out the right side of your screen, the amount of pixels it has to move depends on where it is on the screen, and its width. For the last piece of the puzzle, we have context variables.
+
+A context variable is a variable picom defines for you, and you can use them in expressions like any other variables. Their values reflect certain attributes of the window you are animating.
+
+WARNING: If you define a variable with the same name as a context variable, your variable will shadow the context variable. Since more context variables can be added in the future, this can be difficult to avoid. Thus, the same rule for output variables applies here as well: if you need to define a temporary variable, use one of the reserved names.
+
+Currently, these context variables are defined: :::
+
+  _window-x_, _window-y_:: The coordinates of the top-left corner of the window.
+
+  _window-width_, _window-height_:: The size of the window.
+
+  _window-x-before_, _window-y-before_, _window-width-before_, _window-height-before_:: The size and coordinates of the window from the previous frame. This is only meaningfully different from the normal window geometry variables inside animations triggered by the _geometry_ trigger.
+
+  _window-monitor-x_, _window-monitor-y_, _window-monitor-width_, _window-monitor-height_:: Defines the rectangle which reflects the monitor the window is on. If the window is not fully contained in any monitor, the rectangle will reflect the entire virtual screen.
+
+  _window-raw-opacity-before_, _window-raw-opacity_:: Animation triggers are usually accompanied by a change in the window's opacity. For example, when a window is opened, its opacity changes from 0 to 1. These two variables reflect the opacity of the window for the previous and current frame. They are useful if you want to smoothly transition the window's opacity.
+
+  _window-blur-opacity-before_, _window-blur-opacity_:: The blur opacity of the window for the previous and current frame.
+
+  _window-shadow-red_, _window-shadow-green_, _window-shadow-blue_, _window-shadow-red-before_, _window-shadow-green-before_, _window-shadow-blue-before_:: Color of the shadow before and after the shadow color change. (See notes below about _window-*-before_ variables.
+
+IMPORTANT: All of the _window-*-before_ variables are updated every frame, and reflects the state of the window in the previous frame. Which means they will only be meaningful for a single frame, when an animation has just been triggered. Which means you should only use them to define the _start_, _end_, _duration_, or _delay_ values of a timing function, since these values are only evaluated once when the animation starts.
+--
+
+=== Share your animations
+
+If you have created an animation script that you think is particularly cool, you are encouraged to share it with the community. You can submit an issue or a pull request to picom on GitHub, and get a chance to have your animation included as one of the presets, so it can be used by everyone.
+
+SHADER INTERFACE
+----------------
+
+This section describes the interface of a custom shader, how it is used by picom, and what parameters are passed by picom to the shader.
+
+A custom shader is a GLSL fragment shader program, which can be used to override the default way of how a window is rendered. If a custom shader is used, the default picom effects (e.g. dimming, color inversion, etc.) will no longer be automatically applied. It would be the custom shader's responsibility to apply these effects.
+
+The interface between picom and a custom shader is dependent on which backend is being used. The xrender backend doesn't support shader at all. Here we describe the interface provided by the glx backend.
+
+The shader must define a function, _vec4 window_shader()_, which would be the entry point of the shader. The returned _vec4_ will be used to set __gl_FragColor__. A function, _vec4 default_post_processing(vec4 c)_, is provided for applying the default picom effects to input color 'c'.
+
+The following uniform/input variables are made available to the shader:
+
+[source,glsl]
+----
+in vec2 texcoord;             // texture coordinate of the fragment
+
+uniform float opacity;        // opacity of the window (0.0 - 1.0)
+uniform float dim;            // dimming factor of the window (0.0 - 1.0, higher means more dim)
+uniform float corner_radius;  // corner radius of the window (pixels)
+uniform float border_width;   // estimated border width of the window (pixels)
+uniform bool invert_color;    // whether to invert the color of the window
+uniform sampler2D tex;        // texture of the window
+uniform vec2 effective_size;  // effective dimensions of the texture (repeats pixels if larger than tex)
+uniform sampler2D brightness; // estimated brightness of the window, 1x1 texture
+uniform float max_brightness; // configured maximum brightness of the window (0.0 - 1.0)
+uniform float time;           // time in milliseconds, counting from an unspecified starting point
+----
+
+The default behavior of picom window rendering can be replicated by the following shader:
+
+[source,glsl]
+----
+#version 330
+in vec2 texcoord;             // texture coordinate of the fragment
+
+uniform sampler2D tex;        // texture of the window
+
+// Default window post-processing:
+// 1) invert color
+// 2) opacity / transparency
+// 3) max-brightness clamping
+// 4) rounded corners
+vec4 default_post_processing(vec4 c);
+
+// Default window shader:
+// 1) fetch the specified pixel
+// 2) apply default post-processing
+vec4 window_shader() {
+    vec2 texsize = textureSize(tex, 0);
+    vec4 c = texture2D(tex, texcoord / texsize, 0);
+    return default_post_processing(c);
+}
+----
+
+The interface is expected to be mostly stable.
+
+CONFIGURATION FILES
+-------------------
+picom could read from a configuration file if libconfig support is compiled in. If *--config* is not used, picom will seek for a configuration file in `$XDG_CONFIG_HOME/picom.conf` (`~/.config/picom.conf`, usually), then `$XDG_CONFIG_HOME/picom/picom.conf`, then `$XDG_CONFIG_DIRS/picom.conf` (often `/etc/xdg/picom.conf`), then `$XDG_CONFIG_DIRS/picom/picom.conf`.
+
+When `@include` directive is used in the config file, picom will first search for the included file in the parent directory of `picom.conf`, then in `$XDG_CONFIG_HOME/picom/include/`, then in `$XDG_CONFIG_DIRS/picom/include`.
+
+picom uses general libconfig configuration file format. A sample configuration file is available as `picom.sample.conf` in the source tree. Most of command line switches can be used as options in configuration file as well. For example, *--vsync* option documented above can be set in the configuration file using `vsync = `. Command line options will always overwrite the settings in the configuration file.
+
+Some options can only be set in the configuration file. Such options include `rules` (see xref:_window_rules[*WINDOW RULES*]), `animations` (see xref:_animations[*ANIMATIONS*]), `wintypes` (see below).
+
+Window-type-specific settings allow you to set window-specific options based on the window type. These settings are exposed only in configuration file. The format of this option is as follows:
+
+[#wintypes]
+------------
+wintypes:
+{
+  WINDOW_TYPE = { fade = BOOL; shadow = BOOL; opacity = FLOAT; focus = BOOL; blur-background = BOOL; full-shadow = BOOL; clip-shadow-above = BOOL; redir-ignore = BOOL; };
+};
+------------
+
+WARNING: Using this is highly discouraged, see the xref:_window_rules[*WINDOW RULES*] section for the recommended way to set window-specific options.
+
+IMPORTANT: According to the window manager specification, a window can have multiple types. But due to the limitation of how _wintypes_ was implemented, if a window has multiple types, then for the purpose of applying `wintypes` options, one of the window types will be chosen at random. Again, you are recommended to use xref:_window_rules[*WINDOW RULES*] instead.
+
+_WINDOW_TYPE_ is one of the 15 window types defined in EWMH standard: "unknown", "desktop", "dock", "toolbar", "menu", "utility", "splash", "dialog", "normal", "dropdown_menu", "popup_menu", "tooltip", "notification", "combo", and "dnd".
+
+Following per window-type options are available: ::
+
+  fade, shadow:::
+    Controls window-type-specific shadow and fade settings.
+
+  opacity:::
+    Controls default opacity of the window type.
+
+  focus:::
+    Controls whether the window of this type is to be always considered focused. (By default, all window types except "normal" and "dialog" has this on.)
+
+  blur-background:::
+    Controls whether the window of this type will have its transparent background blurred.
+
+  full-shadow:::
+    Controls whether shadow is drawn under the parts of the window that you normally won't be able to see. Useful when the window has parts of it transparent, and you want shadows in those areas.
+
+  clip-shadow-above:::
+    Controls whether shadows that would have been drawn above the window should be clipped. Useful for dock windows that should have no shadow painted on top.
+
+  redir-ignore:::
+    Controls whether this type of windows should cause screen to become redirected again after been unredirected. If you have *--unredir-if-possible* set, and doesn't want certain window to cause unnecessary screen redirection, you can set this to `true`.
+
+BLUR
+----
+You can configure how the window background is blurred using a 'blur' section in your configuration file. Here is an example:
+
+--------
+blur:
+{
+  method = "gaussian";
+  size = 10;
+  deviation = 5.0;
+};
+--------
+
+Available options of the _blur_ section are: ::
+
+  *method*:::
+    A string. Controls the blur method. Corresponds to the *--blur-method* command line option. Available choices are:
+      _none_ to disable blurring; _gaussian_ for gaussian blur; _box_ for box blur; _kernel_ for convolution blur with a custom kernel; _dual_kawase_ for dual-filter kawase blur.
+    (default: none)
+
+  *size*:::
+    An integer. The size of the blur kernel, required by _gaussian_ and _box_ blur methods. For the _kernel_ method, the size is included in the kernel. Corresponds to the *--blur-size* command line option (default: 3).
+
+  *deviation*:::
+    A floating point number. The standard deviation for the _gaussian_ blur method. Corresponds to the *--blur-deviation* command line option (default: 0.84089642).
+
+  *strength*:::
+    An integer in the range 0-20. The strength of the _dual_kawase_ blur method. Corresponds to the *--blur-strength* command line option. If set to zero, the value requested by *--blur-size* is approximated (default: 5).
+
+  *kernel*:::
+    A string. The kernel to use for the _kernel_ blur method, specified in the same format as the *--blur-kern* option. Corresponds to the *--blur-kern* command line option.
+
+SIGNALS
+-------
+
+* picom reinitializes itself upon receiving `SIGUSR1`.
+
+D-BUS API
+---------
+
+It's possible to control picom via D-Bus messages, by running picom with *--dbus* and send messages to `com.github.chjj.compton.<DISPLAY>`. `<DISPLAY>` is the display used by picom, with all non-alphanumeric characters transformed to underscores. For `DISPLAY=:0.0` you should use `com.github.chjj.compton._0_0`, for example.
+
+The D-Bus methods and signals are not yet stable, thus undocumented right now.
+
+EXAMPLES
+--------
+
+* Disable configuration file parsing:
++
+------------
+$ picom --config /dev/null
+------------
+
+* Run picom with client-side shadow and fading:
++
+------------
+$ picom -cf
+------------
+
+* Same thing as above, plus making inactive windows 80% transparent, making frame 80% transparent, don't fade on window open/close, and fork to background:
++
+------------
+$ picom -bcf -i 0.8 -e 0.8 --no-fading-openclose
+------------
+
+* Draw white shadows:
++
+------------
+$ picom -c --shadow-red 1 --shadow-green 1 --shadow-blue 1
+------------
+
+* Avoid drawing shadows on wbar window:
++
+------------
+$ picom -c --shadow-exclude 'class_g = "wbar"'
+------------
+
+* Enable VSync with GLX backend:
++
+------------
+$ picom --backend glx --vsync
+------------
+
+BUGS
+----
+Please submit bug reports to <https://github.com/yshui/picom>.
+
+Out dated information in this man page is considered a bug.
+
+RESOURCES
+---------
+Homepage: <https://github.com/yshui/picom>
+
+SEE ALSO
+--------
+*xcompmgr*(1), xref:picom-inspect.1.adoc[*picom-inspect*(1)], xref:picom-trans.1.adoc[*picom-trans*(1)]

@@ -1,0 +1,162 @@
+executors:
+  e:
+    docker:
+      - image: yshui/comptonci
+    working_directory: "/tmp/workspace"
+    environment:
+      UBSAN_OPTIONS: "halt_on_error=1"
+
+version: 2.1
+commands:
+  build:
+    parameters:
+      build-config:
+        type: string
+        default: ""
+      cc:
+        type: string
+        default: cc
+    steps:
+      - restore_cache:
+          keys:
+            - source-v1-{{ .Branch }}-{{ .Revision }}
+            - source-v1-{{ .Branch }}-
+            - source-v1-
+      - checkout
+      - save_cache:
+          key: source-v1-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - ".git"
+      - run:
+          name: config
+          command: CC=<< parameters.cc >> meson setup << parameters.build-config >> -Dunittest=true --werror . build
+      - run:
+          name: build
+          command: ninja -vC build
+
+jobs:
+  basic:
+    executor: e
+    steps:
+      - build:
+          build-config: -Dwith_docs=true -Db_coverage=true
+      - run:
+          name: build animgen
+          command: ninja -vC build tools/animgen
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+  test:
+    executor: e
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Tests
+          command: |
+            ulimit -c unlimited
+
+            printf "\n::: test animgen :::\n"
+            build/tools/animgen data/animation_presets.conf >/dev/null 2>error.log
+            [ -s error.log ] && cat error.log && exit 1
+
+            printf "\n::: Unit tests :::\n"
+            ninja -vC build test
+
+            printf "\n::: test config file parsing :::\n"
+            xvfb-run -a -s "-screen 0 640x480x24" build/src/picom --config tests/configs/parsing_test.conf --no-vsync --diagnostics
+            xvfb-run -a -s "-screen 0 640x480x24" build/src/picom --config tests/configs/rules_test.conf --no-vsync --diagnostics
+
+            printf "\n::: test config file parsing in a different locale :::\n"
+            LC_NUMERIC=de_DE.UTF-8 xvfb-run -a -s "-screen 0 640x480x24" build/src/picom --config tests/configs/parsing_test.conf --no-vsync --diagnostics
+
+            printf "\n::: run testsuite :::\n"
+            tests/run_tests.sh build/src/picom
+      - run:
+          name: generate coverage reports
+          command: cd build; find -name '*.gcno' -exec gcov -pb {} +
+      - run:
+          name: download codecov scripts
+          command: curl -s https://codecov.io/bash > codecov.sh
+      - run:
+          name: upload coverage reports
+          command: bash ./codecov.sh -X gcov
+      - run:
+          name: collect coredumps
+          when: on_fail
+          command: |
+            . $HOME/.cargo/env
+            mkdir /tmp/artifacts
+            for c in tests/core.*; do
+              coredump-copy $c /tmp/coredumps/`basename $c`
+            done
+            tar Jcf /tmp/artifacts/coredumps.tar.xz /tmp/coredumps
+      - store_artifacts:
+          path: /tmp/artifacts
+
+  minimal:
+    executor: e
+    steps:
+      - build:
+          build-config: -Dopengl=false -Ddbus=false -Dregex=false
+  release:
+    executor: e
+    steps:
+      - build:
+          build-config: --buildtype=release
+  release-clang:
+    executor: e
+    steps:
+      - build:
+          cc: clang
+          build-config: --buildtype=release
+  nogl:
+    executor: e
+    steps:
+      - build:
+          build-config: -Dopengl=false
+  noregex:
+    executor: e
+    steps:
+      - build:
+          build-config: -Dregex=false
+  clang_basic:
+    executor: e
+    steps:
+      - build:
+          cc: clang
+  clang_minimal:
+    executor: e
+    steps:
+      - build:
+          cc: clang
+          build-config: -Dopengl=false -Ddbus=false -Dregex=false
+  clang_nogl:
+    executor: e
+    steps:
+      - build:
+          cc: clang
+          build-config: -Dopengl=false
+  clang_noregex:
+    executor: e
+    steps:
+      - build:
+          cc: clang
+          build-config: -Dregex=false
+
+workflows:
+  all_builds:
+    jobs:
+      - basic
+      - clang_basic
+      - minimal
+      - clang_minimal
+      - nogl
+      - clang_nogl
+      - release
+      - release-clang
+      - test:
+          requires:
+            - basic
+# vim: set sw=2 ts=8 et:

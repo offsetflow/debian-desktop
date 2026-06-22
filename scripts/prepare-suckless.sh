@@ -21,10 +21,33 @@ sudo apt-get install --no-install-recommends -y \
     xserver-xorg-core \
     xserver-xorg-input-libinput \
     xinit \
+    meson \
+    ninja-build \
     libx11-dev \
+    libx11-xcb-dev \
     libxft-dev \
     libxinerama-dev \
     libxrender-dev \
+    libxcb1-dev \
+    libxcb-composite0-dev \
+    libxcb-damage0-dev \
+    libxcb-glx0-dev \
+    libxcb-image0-dev \
+    libxcb-present-dev \
+    libxcb-randr0-dev \
+    libxcb-render0-dev \
+    libxcb-render-util0-dev \
+    libxcb-shape0-dev \
+    libxcb-util-dev \
+    libxcb-xfixes0-dev \
+    libpixman-1-dev \
+    libconfig-dev \
+    libegl-dev \
+    libgl-dev \
+    libepoxy-dev \
+    libpcre2-dev \
+    libev-dev \
+    uthash-dev \
     libfontconfig1-dev \
     libfreetype-dev \
     fonts-jetbrains-mono \
@@ -53,8 +76,14 @@ sudo apt-get install --no-install-recommends -y \
 # xinit
 #   提供 startx，用于从命令行启动 X11 和 dwm。
 #
+# meson / ninja-build
+#   用于配置和编译 Picom 源码。
+#
 # libx11-dev
 #   X11 基础开发接口，三个 suckless 程序都需要。
+#
+# libx11-xcb-dev
+#   Picom 在 X11 与 XCB 之间通信所需的开发库。
 #
 # libxft-dev
 #   X11 字体渲染接口，负责绘制抗锯齿字体。
@@ -64,6 +93,22 @@ sudo apt-get install --no-install-recommends -y \
 #
 # libxrender-dev
 #   Overview 使用 XRender 抓取并缩放窗口预览图。
+#
+# libxcb*-dev
+#   Picom 监听窗口变化、合成、损伤区域、显示器、同步和 OpenGL
+#   等 X11/XCB 功能所需的开发库。
+#
+# libpixman-1-dev
+#   Picom 的软件像素合成与图像处理库。
+#
+# libconfig-dev / libpcre2-dev
+#   支持读取 picom.conf，以及使用正则表达式匹配窗口规则。
+#
+# libgl-dev / libegl-dev / libepoxy-dev
+#   提供 Picom v13 动画及 OpenGL/EGL 后端所需的图形接口。
+#
+# libev-dev / uthash-dev
+#   Picom 的事件循环和内部哈希表依赖。
 #
 # libfontconfig1-dev
 #   编译 st 时用于查找和匹配系统字体。
