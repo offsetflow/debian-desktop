@@ -4,6 +4,11 @@ set -eu
 ST_DIR=${1:-suckless/st}
 PICOM_CONF=${2:-picom/picom.conf}
 
+# 2K/高密度 LCD 使用 RGB 子像素与完整 hinting，避免字体边缘发灰。
+font_pattern='JetBrains Mono:pixelsize=16:antialias=true:autohint=false:hinting=true:hintstyle=hintfull:rgba=rgb:lcdfilter=lcddefault'
+grep -Fq "static char *font = \"$font_pattern\";" "$ST_DIR/config.h"
+grep -Fq "static char *font = \"$font_pattern\";" "$ST_DIR/config.def.h"
+
 # st 必须自行控制默认背景透明度，前景文字仍保持完全不透明。
 grep -q 'static float alpha = 0.60;' "$ST_DIR/config.h"
 grep -q 'static float alpha = 0.60;' "$ST_DIR/config.def.h"

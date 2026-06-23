@@ -1771,6 +1771,8 @@ void
 setcurrentdesktop(void){
 	long data[] = { 0 };
 	XChangeProperty(dpy, root, netatom[NetCurrentDesktop], XA_CARDINAL, 32, PropModeReplace, (unsigned char *)data, 1);
+	long viewport[] = { selmon->wx, selmon->wy };
+	XChangeProperty(dpy, root, netatom[NetDesktopViewport], XA_CARDINAL, 32, PropModeReplace, (unsigned char *)viewport, 2);
 }
 void setdesktopnames(void){
 	XTextProperty text;
@@ -2031,7 +2033,7 @@ setup(void)
 }
 void
 setviewport(void){
-	long data[] = { 0, 0 };
+	long data[] = { selmon->wx, selmon->wy };
 	XChangeProperty(dpy, root, netatom[NetDesktopViewport], XA_CARDINAL, 32, PropModeReplace, (unsigned char *)data, 2);
 }
 
@@ -2339,6 +2341,8 @@ void updatecurrentdesktop(void){
 			break;
 		}
 	XChangeProperty(dpy, root, netatom[NetCurrentDesktop], XA_CARDINAL, 32, PropModeReplace, (unsigned char *)data, 1);
+	long viewport[] = { selmon->wx, selmon->wy };
+	XChangeProperty(dpy, root, netatom[NetDesktopViewport], XA_CARDINAL, 32, PropModeReplace, (unsigned char *)viewport, 2);
 }
 
 int
