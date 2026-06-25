@@ -166,10 +166,12 @@ static void clientmessage(XEvent *e);
 static void configure(Client *c);
 static void configurenotify(XEvent *e);
 static void configurerequest(XEvent *e);
+static unsigned int countmonitors(void);
 static Monitor *createmon(void);
 static void destroynotify(XEvent *e);
 static void detach(Client *c);
 static void detachstack(Client *c);
+static Monitor *desktoptomonitor(unsigned long desktop);
 static Monitor *dirtomon(int dir);
 static void drawbar(Monitor *m);
 static void drawbars(void);
@@ -196,6 +198,7 @@ static void magicgrid(Monitor *m);
 static void mappingnotify(XEvent *e);
 static void maprequest(XEvent *e);
 static void monocle(Monitor *m);
+static unsigned int monitortodesktop(Monitor *target);
 static void motionnotify(XEvent *e);
 static void movemouse(const Arg *arg);
 static Client *nexttiled(Client *c);
@@ -584,8 +587,15 @@ clientmessage(XEvent *e)
 	Client *c;
 
 	if (cme->message_type == netatom[NetCurrentDesktop]
-	&& cme->data.l[0] >= 0 && cme->data.l[0] < TAGSLENGTH) {
-		Arg arg = { .ui = 1U << cme->data.l[0] };
+	&& cme->data.l[0] >= 0 && cme->data.l[0] < (long)(TAGSLENGTH * countmonitors())) {
+		unsigned long desktop = cme->data.l[0];
+		Monitor *m = desktoptomonitor(desktop);
+		Arg arg = { .ui = 1U << (desktop % TAGSLENGTH) };
+
+		if (m != selmon) {
+			unfocus(selmon->sel, 1);
+			selmon = m;
+		}
 		view(&arg);
 		return;
 	}
@@ -602,6 +612,17 @@ clientmessage(XEvent *e)
 		if (c != selmon->sel && !c->isurgent)
 			seturgent(c, 1);
 	}
+}
+
+unsigned int
+countmonitors(void)
+{
+	unsigned int n = 0;
+	Monitor *m;
+
+	for (m = mons; m; m = m->next)
+		n++;
+	return MAX(n, 1);
 }
 
 void
@@ -755,6 +776,16 @@ detachstack(Client *c)
 		for (t = c->mon->stack; t && !ISVISIBLE(t); t = t->snext);
 		c->mon->sel = t;
 	}
+}
+
+Monitor *
+desktoptomonitor(unsigned long desktop)
+{
+	unsigned long i, monindex = desktop / TAGSLENGTH;
+	Monitor *m;
+
+	for (i = 0, m = mons; m && i < monindex; i++, m = m->next);
+	return m ? m : selmon;
 }
 
 Monitor *
@@ -1344,6 +1375,22 @@ monocle(Monitor *m)
 		resize(c, m->wx, m->wy, m->ww - 2 * c->bw, m->wh - 2 * c->bw, 0);
 }
 
+unsigned int
+monitortodesktop(Monitor *target)
+{
+	unsigned int i, monindex = 0, tagindex = 0;
+	Monitor *m;
+
+	for (m = mons; m && m != target; m = m->next)
+		monindex++;
+	for (i = 0; i < TAGSLENGTH; i++)
+		if (target->tagset[target->seltags] & (1U << i)) {
+			tagindex = i;
+			break;
+		}
+	return monindex * TAGSLENGTH + tagindex;
+}
+
 void
 motionnotify(XEvent *e)
 {
@@ -1769,14 +1816,17 @@ setclientstate(Client *c, long state)
 }
 void
 setcurrentdesktop(void){
-	long data[] = { 0 };
-	XChangeProperty(dpy, root, netatom[NetCurrentDesktop], XA_CARDINAL, 32, PropModeReplace, (unsigned char *)data, 1);
-	long viewport[] = { selmon->wx, selmon->wy };
-	XChangeProperty(dpy, root, netatom[NetDesktopViewport], XA_CARDINAL, 32, PropModeReplace, (unsigned char *)viewport, 2);
+	updatecurrentdesktop();
 }
 void setdesktopnames(void){
+	unsigned int i, n, desktops = TAGSLENGTH * countmonitors();
+	char *names[desktops];
 	XTextProperty text;
-	Xutf8TextListToTextProperty(dpy, (char **)tags, TAGSLENGTH, XUTF8StringStyle, &text);
+
+	for (i = 0; i < desktops; i++)
+		names[i] = (char *)tags[i % TAGSLENGTH];
+	n = desktops;
+	Xutf8TextListToTextProperty(dpy, names, n, XUTF8StringStyle, &text);
 	XSetTextProperty(dpy, root, &text, netatom[NetDesktopNames]);
 	XFree(text.value);
 }
@@ -1808,7 +1858,7 @@ sendevent(Client *c, Atom proto)
 
 void
 setnumdesktops(void){
-	long data[] = { TAGSLENGTH };
+	long data[] = { TAGSLENGTH * countmonitors() };
 	XChangeProperty(dpy, root, netatom[NetNumberOfDesktops], XA_CARDINAL, 32, PropModeReplace, (unsigned char *)data, 1);
 }
 
@@ -2033,8 +2083,16 @@ setup(void)
 }
 void
 setviewport(void){
-	long data[] = { selmon->wx, selmon->wy };
-	XChangeProperty(dpy, root, netatom[NetDesktopViewport], XA_CARDINAL, 32, PropModeReplace, (unsigned char *)data, 2);
+	unsigned int i, j, n = countmonitors();
+	long data[TAGSLENGTH * n * 2];
+	Monitor *m;
+
+	for (i = 0, m = mons; m; i++, m = m->next)
+		for (j = 0; j < TAGSLENGTH; j++) {
+			data[(i * TAGSLENGTH + j) * 2] = m->wx;
+			data[(i * TAGSLENGTH + j) * 2 + 1] = m->wy;
+		}
+	XChangeProperty(dpy, root, netatom[NetDesktopViewport], XA_CARDINAL, 32, PropModeReplace, (unsigned char *)data, TAGSLENGTH * n * 2);
 }
 
 void
@@ -2332,17 +2390,9 @@ updateclientlist(void)
 				(unsigned char *) &(c->win), 1);
 }
 void updatecurrentdesktop(void){
-	unsigned int i;
-	long data[] = { 0 };
-
-	for (i = 0; i < TAGSLENGTH; i++)
-		if (selmon->tagset[selmon->seltags] & (1U << i)) {
-			data[0] = i;
-			break;
-		}
+	long data[] = { monitortodesktop(selmon) };
 	XChangeProperty(dpy, root, netatom[NetCurrentDesktop], XA_CARDINAL, 32, PropModeReplace, (unsigned char *)data, 1);
-	long viewport[] = { selmon->wx, selmon->wy };
-	XChangeProperty(dpy, root, netatom[NetDesktopViewport], XA_CARDINAL, 32, PropModeReplace, (unsigned char *)viewport, 2);
+	setviewport();
 }
 
 int
