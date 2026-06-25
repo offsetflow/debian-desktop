@@ -20,7 +20,9 @@ tmp="$(mktemp)"
 
 echo "==> 下载订阅配置，不显示 URL"
 url="$(tr -d '\r\n' < "$URL_FILE")"
-curl -fL --retry 3 --connect-timeout 20 "$url" -o "$tmp"
+curl -fL --retry 3 --connect-timeout 20 \
+    -A "clash-verge/v2.5.1" \
+    "$url" -o "$tmp"
 
 if ! grep -Eq '^(proxies|proxy-providers|proxy-groups|rules|mixed-port|port|socks-port):' "$tmp"; then
     echo "下载内容看起来不像 mihomo/clash YAML 配置，已停止导入" >&2
