@@ -53,6 +53,11 @@ sudo apt-get install --no-install-recommends -y \
     fonts-jetbrains-mono \
     fonts-noto-cjk \
     polybar \
+    pipewire \
+    pipewire-pulse \
+    wireplumber \
+    pavucontrol \
+    pamixer \
     feh
 
 # 上面每个软件包的用途：
@@ -127,6 +132,21 @@ sudo apt-get install --no-install-recommends -y \
 # polybar
 #   提供可配置的 X11 状态栏，用于显示窗口标题、时间、网络和电池。
 #   APT 会自动安装它运行所必需的图形与音频库。
+#
+# pipewire
+#   现代 Linux 音频底层，负责实际的音频流处理。
+#
+# pipewire-pulse
+#   提供 PulseAudio 兼容层，让 Chrome、IDE 和常见播放器能直接出声。
+#
+# wireplumber
+#   PipeWire 会话管理器，负责默认输出设备、输入设备和设备切换。
+#
+# pavucontrol
+#   图形音量控制面板，适合在 dwm 中临时调整应用音量和输出设备。
+#
+# pamixer
+#   命令行音量控制工具，适合绑定到 dwm 的音量快捷键。
 #
 # feh
 #   轻量 X11 图片工具，用于在启动 dwm 时设置单屏或多屏壁纸。
