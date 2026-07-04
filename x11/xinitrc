@@ -1,11 +1,36 @@
 #!/bin/sh
 
+# 启动 X11 会话前先确保本机代理可用。
+# start.sh 自己会处理“已在运行”的情况；如果代理临时失败，也不阻塞桌面启动。
+if [ -x "$HOME/workspace/personal/debian-desktop/mihomo/start.sh" ]; then
+    "$HOME/workspace/personal/debian-desktop/mihomo/start.sh" >/dev/null 2>&1 || true
+fi
+
+# 最小 startx 会话里通常没有桌面环境代为初始化 D-Bus，会影响输入法和配置工具。
+if [ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ] && command -v dbus-launch >/dev/null 2>&1; then
+    eval "$(dbus-launch --sh-syntax --exit-with-session)"
+fi
+
+# 显式导出输入法环境变量，确保终端、浏览器和 GTK/Qt 应用都能调起 fcitx5。
+export XMODIFIERS="@im=fcitx"
+export GTK_IM_MODULE="fcitx"
+export QT_IM_MODULE="fcitx"
+export SDL_IM_MODULE="fcitx"
+
+# fcitx5 已运行时跳过；启动失败也不阻塞 dwm 会话。
+if command -v fcitx5 >/dev/null 2>&1; then
+    pgrep -u "$USER" -x fcitx5 >/dev/null 2>&1 || fcitx5 -d >/dev/null 2>&1 || true
+fi
+
 # 设置桌面壁纸。脚本执行完成后 feh 不需要常驻。
 "$HOME/workspace/personal/debian-desktop/wallpapers/set-wallpaper.sh"
 
 # 启动 Picom 合成器，提供透明、模糊、阴影和窗口动画效果。
 # launch.sh 会先结束旧进程，避免重复启动多个 Picom 实例。
 "$HOME/workspace/personal/debian-desktop/picom/launch.sh"
+
+# 载入 Xresources，应用字体渲染等 Xft 配置。
+xrdb -merge "$HOME/.Xresources"
 
 # 由 startx 启动 dwm。
 # exec 让 dwm 接管当前 X11 会话；退出 dwm 时，X11 会话随之结束。
