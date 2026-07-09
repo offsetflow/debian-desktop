@@ -202,6 +202,7 @@ static unsigned int monitortodesktop(Monitor *target);
 static void motionnotify(XEvent *e);
 static void movemouse(const Arg *arg);
 static Client *nexttiled(Client *c);
+static unsigned int numtiledvisible(Monitor *m);
 static void pop(Client *c);
 static void previewallwin(const Arg *arg);
 static void propertynotify(XEvent *e);
@@ -233,6 +234,7 @@ static void spawn(const Arg *arg);
 static void spawnbar();
 static void tag(const Arg *arg);
 static void tagmon(const Arg *arg);
+static int shouldhideborder(Client *c);
 static void tile(Monitor *m);
 static void togglebar(const Arg *arg);
 static void togglefloating(const Arg *arg);
@@ -912,7 +914,9 @@ focus(Client *c)
 		detachstack(c);
 		attachstack(c);
 		grabbuttons(c, 1);
-		XSetWindowBorder(dpy, c->win, scheme[SchemeSel][ColBorder].pixel);
+		XSetWindowBorder(dpy, c->win, shouldhideborder(c)
+			? scheme[SchemeNorm][ColBorder].pixel
+			: scheme[SchemeSel][ColBorder].pixel);
 		setfocus(c);
 	} else {
 		XSetInputFocus(dpy, root, RevertToPointerRoot, CurrentTime);
@@ -1281,6 +1285,7 @@ magicgrid(Monitor *m)
 {
 	unsigned int ch, cols, cw, cx, cy, dx, i, ih, iv, n, oh, ov, overcols, rows;
 	Client *c;
+	unsigned int bw;
 
 	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++);
 	if (n == 0)
@@ -1288,32 +1293,30 @@ magicgrid(Monitor *m)
 
 	oh = gapsenabled && !(smartgaps && n == 1) ? currentgappoh : 0;
 	ov = gapsenabled && !(smartgaps && n == 1) ? currentgappov : 0;
-	ih = gapsenabled ? currentgappih : 0;
-	iv = gapsenabled ? currentgappiv : 0;
+	ih = gapsenabled && n > 1 ? currentgappih : 0;
+	iv = gapsenabled && n > 1 ? currentgappiv : 0;
 
 	if (n == 1) {
 		c = nexttiled(m->clients);
-		cw = (m->ww - 2 * ov) * 0.70;
-		ch = (m->wh - 2 * oh) * 0.65;
-		resize(c,
-			m->wx + (m->ww - cw) / 2,
-			m->wy + (m->wh - ch) / 2,
-			cw - 2 * c->bw,
-			ch - 2 * c->bw,
-			0);
+		c->bw = shouldhideborder(c) ? 0 : borderpx;
+		resize(c, m->wx, m->wy, m->ww - 2 * (shouldhideborder(c) ? 0 : c->bw), m->wh - 2 * (shouldhideborder(c) ? 0 : c->bw), 0);
 		return;
 	}
 
 	if (n == 2) {
 		c = nexttiled(m->clients);
+		c->bw = shouldhideborder(c) ? 0 : borderpx;
+		bw = c->bw;
 		cw = (m->ww - 2 * ov - ih) / 2;
 		ch = (m->wh - 2 * oh) * 0.65;
 		cy = m->wy + (m->wh - ch) / 2;
 		resize(c, m->wx + ov, cy,
-			cw - 2 * c->bw, ch - 2 * c->bw, 0);
+			cw - 2 * bw, ch - 2 * bw, 0);
 		c = nexttiled(c->next);
+		c->bw = shouldhideborder(c) ? 0 : borderpx;
+		bw = c->bw;
 		resize(c, m->wx + ov + cw + ih, cy,
-			cw - 2 * c->bw, ch - 2 * c->bw, 0);
+			cw - 2 * bw, ch - 2 * bw, 0);
 		return;
 	}
 
@@ -1327,12 +1330,14 @@ magicgrid(Monitor *m)
 		: ov;
 
 	for (i = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++) {
+		c->bw = shouldhideborder(c) ? 0 : borderpx;
+		bw = c->bw;
 		cx = ov + (i % cols) * (cw + ih);
 		cy = oh + (i / cols) * (ch + iv);
 		if (overcols && i >= n - overcols)
 			cx = dx + (i - (n - overcols)) * (cw + ih);
 		resize(c, m->wx + cx, m->wy + cy,
-			cw - 2 * c->bw, ch - 2 * c->bw, 0);
+			cw - 2 * bw, ch - 2 * bw, 0);
 	}
 }
 
@@ -1371,8 +1376,10 @@ monocle(Monitor *m)
 			n++;
 	if (n > 0) /* override layout symbol */
 		snprintf(m->ltsymbol, sizeof m->ltsymbol, "[%d]", n);
-	for (c = nexttiled(m->clients); c; c = nexttiled(c->next))
+	for (c = nexttiled(m->clients); c; c = nexttiled(c->next)) {
+		c->bw = shouldhideborder(c) ? 0 : borderpx;
 		resize(c, m->wx, m->wy, m->ww - 2 * c->bw, m->wh - 2 * c->bw, 0);
+	}
 }
 
 unsigned int
@@ -1473,6 +1480,16 @@ nexttiled(Client *c)
 {
 	for (; c && (c->isfloating || !ISVISIBLE(c)); c = c->next);
 	return c;
+}
+
+unsigned int
+numtiledvisible(Monitor *m)
+{
+	unsigned int n;
+	Client *c;
+
+	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++);
+	return n;
 }
 
 void
@@ -2178,15 +2195,16 @@ tile(Monitor *m)
 {
 	unsigned int i, n, h, ih, iv, mw, my, oh, ov, ty;
 	Client *c;
+	unsigned int bw;
 
-	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++);
+	n = numtiledvisible(m);
 	if (n == 0)
 		return;
 
 	oh = gapsenabled && !(smartgaps && n == 1) ? currentgappoh : 0;
 	ov = gapsenabled && !(smartgaps && n == 1) ? currentgappov : 0;
-	ih = gapsenabled ? currentgappih : 0;
-	iv = gapsenabled ? currentgappiv : 0;
+	ih = gapsenabled && n > 1 ? currentgappih : 0;
+	iv = gapsenabled && n > 1 ? currentgappiv : 0;
 
 	if (n > m->nmaster)
 		mw = m->nmaster ? (m->ww - 2 * ov - ih) * m->mfact : 0;
@@ -2195,17 +2213,21 @@ tile(Monitor *m)
 	for (i = 0, my = ty = oh, c = nexttiled(m->clients);
 	     c; c = nexttiled(c->next), i++)
 		if (i < m->nmaster) {
+			c->bw = shouldhideborder(c) ? 0 : borderpx;
+			bw = c->bw;
 			h = (m->wh - my - oh
 			   - iv * (MIN(n, m->nmaster) - i - 1))
 			  / (MIN(n, m->nmaster) - i);
 			resize(c, m->wx + ov, m->wy + my,
-				mw - 2 * c->bw, h - 2 * c->bw, 0);
+				mw - 2 * bw, h - 2 * bw, 0);
 			my += HEIGHT(c) + iv;
 		} else {
+			c->bw = shouldhideborder(c) ? 0 : borderpx;
+			bw = c->bw;
 			h = (m->wh - ty - oh - iv * (n - i - 1)) / (n - i);
 			resize(c, m->wx + ov + mw + ih, m->wy + ty,
-				m->ww - mw - 2 * ov - ih - 2 * c->bw,
-				h - 2 * c->bw, 0);
+				m->ww - mw - 2 * ov - ih - 2 * bw,
+				h - 2 * bw, 0);
 			ty += HEIGHT(c) + iv;
 		}
 }
@@ -2279,6 +2301,14 @@ unfocus(Client *c, int setfocus)
 		XSetInputFocus(dpy, root, RevertToPointerRoot, CurrentTime);
 		XDeleteProperty(dpy, root, netatom[NetActiveWindow]);
 	}
+}
+
+int
+shouldhideborder(Client *c)
+{
+	return c && ISVISIBLE(c) && !c->isfloating && !c->isfullscreen &&
+		c->mon && c->mon->lt[c->mon->sellt]->arrange &&
+		numtiledvisible(c->mon) == 1;
 }
 
 void

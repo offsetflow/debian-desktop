@@ -13,3 +13,11 @@ grep -q "static const int smartgaps" "$CONFIG_H"
 grep -q "static void togglegaps(const Arg \*arg);" "$DWM_C"
 grep -q "static void incrgaps(const Arg \*arg);" "$DWM_C"
 grep -q "XK_g,[[:space:]]*togglegaps" "$CONFIG_H"
+
+# 单窗口平铺时必须统一关闭 gaps 与边框。
+grep -q "static unsigned int numtiledvisible(Monitor \*m);" "$DWM_C"
+grep -q "static int shouldhideborder(Client \*c);" "$DWM_C"
+grep -q "^numtiledvisible(Monitor \*m)" "$DWM_C"
+grep -q "^shouldhideborder(Client \*c)" "$DWM_C"
+grep -q "XSetWindowBorder(dpy, c->win, shouldhideborder(c)" "$DWM_C"
+grep -q "resize(c, m->wx, m->wy, m->ww - 2 \* (shouldhideborder(c) ? 0 : c->bw), m->wh - 2 \* (shouldhideborder(c) ? 0 : c->bw), 0);" "$DWM_C"

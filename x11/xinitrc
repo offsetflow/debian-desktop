@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# 设置显示器布局。外接屏始终作为主屏，参数决定它位于笔记本屏的左侧还是右侧。
+monitor_position=${1:-left}
+"$HOME/workspace/personal/debian-desktop/x11/setup-monitors.sh" "$monitor_position" || exit $?
+
 # 启动 X11 会话前先确保本机代理可用。
 # start.sh 自己会处理“已在运行”的情况；如果代理临时失败，也不阻塞桌面启动。
 if [ -x "$HOME/workspace/personal/debian-desktop/mihomo/start.sh" ]; then
@@ -33,5 +37,6 @@ fi
 xrdb -merge "$HOME/.Xresources"
 
 # 由 startx 启动 dwm。
+# 优先使用当前用户下的编译结果，避免依赖系统目录里的旧版本。
 # exec 让 dwm 接管当前 X11 会话；退出 dwm 时，X11 会话随之结束。
-exec dwm
+exec "$HOME/.local/bin/dwm"
