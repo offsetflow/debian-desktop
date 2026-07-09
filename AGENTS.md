@@ -7,7 +7,7 @@
 - 主用户为 `dev`。
 - 桌面环境仓库：`/home/dev/workspace/personal/debian-desktop`。
 - 普通开发项目：`/home/dev/workspace/playground/<project>`。
-- `debian-desktop` 是桌面环境和开发环境配置的唯一事实来源。
+- `debian-desktop` 只负责拉起可直接使用的 Debian、dwm 和基础开发环境。
 
 ## 2. 目录职责
 
@@ -62,10 +62,12 @@ debian-desktop/
 - 可复现的配置文件。
 - dwm、st、dmenu 等需要维护的源码。
 - 系统依赖清单。
-- 安装、部署、启动和维护脚本。
+- 操作系统、桌面环境和基础开发工具的安装、部署与启动脚本。
 - 非敏感的配置模板。
 
 仓库不得管理：
+
+- MySQL、Redis 等通用开发服务及其 Compose 配置；这类服务统一放在 `/home/dev/workspace/services/local-infra`。
 
 - 密码、SSH 私钥、API Key、Token 和代理订阅地址。
 - 浏览器数据、Cookie 和用户运行状态。
