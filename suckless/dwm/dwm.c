@@ -1514,6 +1514,8 @@ previewallwin(const Arg *arg)
 		return;
 
 	selected = m->sel ? m->sel : m->clients;
+	while (selected && !selected->preview.win)
+		selected = selected->next ? selected->next : m->clients;
 	if (selected && selected->preview.win)
 		XSetWindowBorder(dpy, selected->preview.win,
 			scheme[SchemeSel][ColBorder].pixel);
@@ -1532,7 +1534,10 @@ previewallwin(const Arg *arg)
 				if (selected && selected->preview.win)
 					XSetWindowBorder(dpy, selected->preview.win,
 						scheme[SchemeNorm][ColBorder].pixel);
-				selected = selected && selected->next ? selected->next : m->clients;
+				do {
+					selected = selected && selected->next
+						? selected->next : m->clients;
+				} while (selected && !selected->preview.win);
 				if (selected && selected->preview.win) {
 					XSetWindowBorder(dpy, selected->preview.win,
 						scheme[SchemeSel][ColBorder].pixel);
@@ -1747,30 +1752,27 @@ run(void)
 XImage *
 scaledownimage(Client *c, unsigned int width, unsigned int height)
 {
-	unsigned int factor, factorh, factorw, x, y;
+	unsigned int x, y;
 	XImage *image, *original;
 
 	original = getwindowximage(c);
 	if (!original || width == 0 || height == 0)
 		return NULL;
 
-	factorw = (original->width + width - 1) / width;
-	factorh = (original->height + height - 1) / height;
-	factor = MAX(MAX(factorw, factorh), 1);
-
 	image = XCreateImage(dpy, DefaultVisual(dpy, screen),
 		DefaultDepth(dpy, screen), ZPixmap, 0, NULL,
-		MAX(original->width / factor, 1),
-		MAX(original->height / factor, 1), 32, 0);
+		width, height, 32, 0);
 	if (!image) {
 		XDestroyImage(original);
 		return NULL;
 	}
 	image->data = ecalloc(image->height, image->bytes_per_line);
-	for (y = 0; y < (unsigned int)image->height; y++)
-		for (x = 0; x < (unsigned int)image->width; x++)
+	for (y = 0; y < height; y++)
+		for (x = 0; x < width; x++)
 			XPutPixel(image, x, y,
-				XGetPixel(original, x * factor, y * factor));
+				XGetPixel(original,
+					x * original->width / width,
+					y * original->height / height));
 
 	XDestroyImage(original);
 	return image;
@@ -1884,11 +1886,12 @@ setpreviewwins(Monitor *m)
 {
 	const unsigned int gap = 18;
 	const unsigned int outer = 60;
-	const unsigned int padding = 12;
 	unsigned int availableh, availablew, cardh, cardw, cols, gridh;
-	unsigned int i, imagex, imagey, n, row, rowcount, rowoffset, rows, rowwidth;
+	unsigned int i, n, row, rowcount, rowoffset, rows, rowwidth;
+	int ok = 0;
 	Client *c;
 	GC gc;
+	Pixmap pixmap;
 	XImage *image;
 
 	for (n = 0, c = m->clients; c; c = c->next, n++);
@@ -1909,11 +1912,9 @@ setpreviewwins(Monitor *m)
 	gridh = rows * cardh + (rows - 1) * gap;
 
 	for (i = 0, c = m->clients; c; c = c->next, i++) {
-		image = scaledownimage(c, cardw - 2 * padding, cardh - 2 * padding);
-		if (!image) {
-			clearoverview(m, NULL);
-			return 0;
-		}
+		image = scaledownimage(c, cardw, cardh);
+		if (!image)
+			continue;
 		row = i / cols;
 		rowcount = MIN(cols, n - row * cols);
 		rowwidth = rowcount * cardw + (rowcount - 1) * gap;
@@ -1928,15 +1929,24 @@ setpreviewwins(Monitor *m)
 			scheme[SchemeNorm][ColBg].pixel);
 		XSelectInput(dpy, c->preview.win,
 			ButtonPressMask|EnterWindowMask|LeaveWindowMask);
-		gc = XCreateGC(dpy, c->preview.win, 0, NULL);
-		imagex = (cardw - image->width) / 2;
-		imagey = (cardh - image->height) / 2;
-		XPutImage(dpy, c->preview.win, gc, image, 0, 0, imagex, imagey,
-			image->width, image->height);
+		pixmap = XCreatePixmap(dpy, root, cardw, cardh,
+			DefaultDepth(dpy, screen));
+		gc = XCreateGC(dpy, pixmap, 0, NULL);
+		XSetForeground(dpy, gc, scheme[SchemeNorm][ColBg].pixel);
+		XFillRectangle(dpy, pixmap, gc, 0, 0, cardw, cardh);
+		XPutImage(dpy, pixmap, gc, image, 0, 0, 0, 0,
+			cardw, cardh);
+		XSetWindowBackgroundPixmap(dpy, c->preview.win, pixmap);
 		XFreeGC(dpy, gc);
+		XFreePixmap(dpy, pixmap);
 		XDestroyImage(image);
 		XUnmapWindow(dpy, c->win);
 		XMapRaised(dpy, c->preview.win);
+		ok = 1;
+	}
+	if (!ok) {
+		clearoverview(m, NULL);
+		return 0;
 	}
 	XSync(dpy, False);
 	return 1;
