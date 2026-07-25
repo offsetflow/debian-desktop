@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -86,6 +87,11 @@ typedef struct {
 typedef struct Monitor Monitor;
 typedef struct Client Client;
 typedef struct Preview Preview;
+typedef struct AppLabel AppLabel;
+struct AppLabel {
+	const char *class;
+	const char *label;
+};
 struct Preview {
 	int x, y, w, h;
 	Window win;
@@ -185,6 +191,7 @@ static Atom getatomprop(Client *c, Atom prop);
 static int getrootptr(int *x, int *y);
 static long getstate(Window w);
 static int gettextprop(Window w, Atom atom, char *text, unsigned int size);
+static void getclientlabel(Client *c, char *label, size_t size);
 static XImage *getwindowximage(Client *c);
 static void grabbuttons(Client *c, int focused);
 static void grabkeys(void);
@@ -203,6 +210,7 @@ static void motionnotify(XEvent *e);
 static void movemouse(const Arg *arg);
 static Client *nexttiled(Client *c);
 static unsigned int numtiledvisible(Monitor *m);
+static int isfullscreenlikefloating(Client *c);
 static void pop(Client *c);
 static void previewallwin(const Arg *arg);
 static void propertynotify(XEvent *e);
@@ -210,6 +218,7 @@ static void quit(const Arg *arg);
 static Monitor *recttomon(int x, int y, int w, int h);
 static void resize(Client *c, int x, int y, int w, int h, int interact);
 static void resizeclient(Client *c, int x, int y, int w, int h);
+static void syncborder(Client *c);
 static void resizemouse(const Arg *arg);
 static void restack(Monitor *m);
 static void run(void);
@@ -307,6 +316,8 @@ static unsigned int currentgappiv;
 static unsigned int currentgappoh;
 static unsigned int currentgappov;
 static int gapsenabled = 1;
+
+#define DESKTOPNAMELEN 64
 
 /* compile-time check if all tags fit into an unsigned int bit array. */
 struct NumTags { char limitexceeded[LENGTH(tags) > 31 ? -1 : 1]; };
@@ -433,9 +444,14 @@ arrange(Monitor *m)
 void
 arrangemon(Monitor *m)
 {
+	Client *c;
+
 	strncpy(m->ltsymbol, m->lt[m->sellt]->symbol, sizeof m->ltsymbol);
 	if (m->lt[m->sellt]->arrange)
 		m->lt[m->sellt]->arrange(m);
+	for (c = m->clients; c; c = c->next)
+		if (ISVISIBLE(c))
+			syncborder(c);
 }
 
 void
@@ -923,6 +939,7 @@ focus(Client *c)
 		XDeleteProperty(dpy, root, netatom[NetActiveWindow]);
 	}
 	selmon->sel = c;
+	setdesktopnames();
 	drawbars();
 }
 
@@ -1042,6 +1059,35 @@ gettextprop(Window w, Atom atom, char *text, unsigned int size)
 	text[size - 1] = '\0';
 	XFree(name.value);
 	return 1;
+}
+
+void
+getclientlabel(Client *c, char *label, size_t size)
+{
+	const char *fallback = NULL;
+	unsigned int i;
+	XClassHint ch = { NULL, NULL };
+
+	if (!label || size == 0)
+		return;
+	label[0] = '\0';
+	if (c && XGetClassHint(dpy, c->win, &ch)) {
+		fallback = ch.res_class ? ch.res_class : ch.res_name;
+		for (i = 0; i < LENGTH(app_labels); i++)
+			if ((ch.res_class && strcasecmp(ch.res_class, app_labels[i].class) == 0) ||
+			    (ch.res_name && strcasecmp(ch.res_name, app_labels[i].class) == 0)) {
+				snprintf(label, size, "%s", app_labels[i].label);
+				break;
+			}
+		if (!label[0] && fallback && fallback[0])
+			snprintf(label, size, "  ▪ %.36s  ", fallback);
+	}
+	if (!label[0])
+		snprintf(label, size, "  ▪ App  ");
+	if (ch.res_class)
+		XFree(ch.res_class);
+	if (ch.res_name)
+		XFree(ch.res_name);
 }
 
 XImage *
@@ -1492,6 +1538,16 @@ numtiledvisible(Monitor *m)
 	return n;
 }
 
+int
+isfullscreenlikefloating(Client *c)
+{
+	return c && c->isfloating && !c->isfullscreen && c->mon &&
+		c->x == c->mon->wx &&
+		c->y == c->mon->wy &&
+		WIDTH(c) == c->mon->ww &&
+		HEIGHT(c) == c->mon->wh;
+}
+
 void
 pop(Client *c)
 {
@@ -1654,6 +1710,15 @@ resizeclient(Client *c, int x, int y, int w, int h)
 	XConfigureWindow(dpy, c->win, CWX|CWY|CWWidth|CWHeight|CWBorderWidth, &wc);
 	configure(c);
 	XSync(dpy, False);
+}
+
+void
+syncborder(Client *c)
+{
+	XWindowChanges wc;
+
+	wc.border_width = c->bw;
+	XConfigureWindow(dpy, c->win, CWBorderWidth, &wc);
 }
 
 void
@@ -1837,15 +1902,31 @@ void
 setcurrentdesktop(void){
 	updatecurrentdesktop();
 }
-void setdesktopnames(void){
-	unsigned int i, n, desktops = TAGSLENGTH * countmonitors();
+void
+setdesktopnames(void)
+{
+	unsigned int desktop = 0, tag;
+	unsigned int desktops = TAGSLENGTH * countmonitors();
+	char desktopnames[desktops][DESKTOPNAMELEN];
 	char *names[desktops];
+	Client *c;
+	Monitor *m;
 	XTextProperty text;
 
-	for (i = 0; i < desktops; i++)
-		names[i] = (char *)tags[i % TAGSLENGTH];
-	n = desktops;
-	Xutf8TextListToTextProperty(dpy, names, n, XUTF8StringStyle, &text);
+	memset(desktopnames, 0, sizeof desktopnames);
+	for (m = mons; m; m = m->next)
+		for (tag = 0; tag < TAGSLENGTH; tag++, desktop++) {
+			names[desktop] = desktopnames[desktop];
+			snprintf(desktopnames[desktop], DESKTOPNAMELEN, "\xE2\x80\x8B");
+			for (c = m->stack; c; c = c->snext)
+				if (c->tags & (1U << tag)) {
+					getclientlabel(c, desktopnames[desktop], DESKTOPNAMELEN);
+					break;
+				}
+		}
+	if (Xutf8TextListToTextProperty(dpy, names, desktops,
+	    XUTF8StringStyle, &text) != Success)
+		return;
 	XSetTextProperty(dpy, root, &text, netatom[NetDesktopNames]);
 	XFree(text.value);
 }
@@ -2316,9 +2397,12 @@ unfocus(Client *c, int setfocus)
 int
 shouldhideborder(Client *c)
 {
-	return c && ISVISIBLE(c) && !c->isfloating && !c->isfullscreen &&
-		c->mon && c->mon->lt[c->mon->sellt]->arrange &&
-		numtiledvisible(c->mon) == 1;
+	return c && ISVISIBLE(c) && (
+		(!c->isfloating && !c->isfullscreen &&
+		 c->mon && c->mon->lt[c->mon->sellt]->arrange &&
+		 numtiledvisible(c->mon) == 1) ||
+		isfullscreenlikefloating(c)
+	);
 }
 
 void

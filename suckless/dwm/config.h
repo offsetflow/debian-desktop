@@ -25,6 +25,20 @@ static const char *colors[][3]      = {
 /* tagging */
 static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
 
+/* Polybar workspace labels, matched case-insensitively against WM_CLASS. */
+static const AppLabel app_labels[] = {
+	{ "St", "   Terminal  " },
+	{ "Google-chrome", "   Chrome  " },
+	{ "Chromium", "   Chromium  " },
+	{ "Firefox", "   Firefox  " },
+	{ "jetbrains-idea", "   IntelliJ IDEA  " },
+	{ "jetbrains-idea-ce", "   IntelliJ IDEA  " },
+	{ "Code", "   Visual Studio Code  " },
+	{ "Thunar", "   Files  " },
+	{ "Pcmanfm", "   Files  " },
+	{ "Nautilus", "   Files  " },
+};
+
 static const Rule rules[] = {
 	/* xprop(1):
 	 *	WM_CLASS(STRING) = instance, class
