@@ -71,6 +71,7 @@ picom_headers=(
     libxcb-xfixes0-dev
     libpixman-1-dev
     libconfig-dev
+    libdbus-1-dev
     libegl-dev
     libgl-dev
     libepoxy-dev

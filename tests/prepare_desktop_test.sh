@@ -42,6 +42,7 @@ for package_name in \
     pipewire-pulse \
     fonts-font-awesome \
     meson \
+    libdbus-1-dev \
     libepoxy-dev
 do
     grep -Fq " $package_name" "$command_log"
