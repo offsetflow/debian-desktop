@@ -14,8 +14,8 @@ grep -q "static XImage \*scaledownimage(Client \*c" "$DWM_C"
 grep -q "XK_a,[[:space:]]*previewallwin" "$CONFIG_H"
 grep -q -- "-lXrender" "$CONFIG_MK"
 
-# Overview 卡片必须统一使用网格单元尺寸，截图仅在卡片内居中绘制。
+# Overview 卡片必须统一使用 16:10 网格单元尺寸，截图缩放后填满卡片。
 grep -q "c->preview.w = cardw;" "$DWM_C"
 grep -q "c->preview.h = cardh;" "$DWM_C"
-grep -q "imagex = (cardw - image->width) / 2;" "$DWM_C"
+grep -q "image = scaledownimage(c, cardw, cardh);" "$DWM_C"
 grep -q "rowoffset = (m->ww - rowwidth) / 2;" "$DWM_C"
