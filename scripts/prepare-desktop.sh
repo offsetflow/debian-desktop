@@ -18,7 +18,8 @@ x11_runtime=(
     dbus-x11
 )
 
-# 桌面运行依赖：状态栏、中文输入法、现代音频栈、音量控制和壁纸。
+# 桌面运行依赖：状态栏、中文输入法、现代音频栈、音量控制、壁纸，
+# 以及 OMZ 所需的 Zsh、模糊搜索、文件搜索和 Lua。
 desktop_runtime=(
     polybar
     fcitx5
@@ -29,6 +30,10 @@ desktop_runtime=(
     pavucontrol
     pamixer
     feh
+    zsh
+    fzf
+    fd-find
+    lua5.4
 )
 
 # 桌面字体：终端与界面字体、CJK 回退字体和 Polybar 图标字体。
@@ -41,6 +46,7 @@ fonts=(
 # 通用编译工具：用于构建 suckless 项目和仓库内 Picom。
 build_tools=(
     build-essential
+    git
     pkg-config
     meson
     ninja-build
