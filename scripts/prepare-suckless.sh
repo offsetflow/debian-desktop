@@ -21,6 +21,7 @@ sudo apt-get install --no-install-recommends -y \
     xserver-xorg-core \
     xserver-xorg-input-libinput \
     xinit \
+    x11-xserver-utils \
     meson \
     ninja-build \
     libx11-dev \
@@ -52,6 +53,9 @@ sudo apt-get install --no-install-recommends -y \
     libfreetype-dev \
     fonts-jetbrains-mono \
     fonts-noto-cjk \
+    fonts-font-awesome \
+    fcitx5 \
+    fcitx5-chinese-addons \
     polybar \
     pipewire \
     pipewire-pulse \
@@ -80,6 +84,9 @@ sudo apt-get install --no-install-recommends -y \
 #
 # xinit
 #   提供 startx，用于从命令行启动 X11 和 dwm。
+#
+# x11-xserver-utils
+#   提供 xrandr；Polybar 的亮度模块用它调整当前显示器亮度。
 #
 # meson / ninja-build
 #   用于配置和编译 Picom 源码。
@@ -128,6 +135,12 @@ sudo apt-get install --no-install-recommends -y \
 #   提供简体中文、繁体中文、日文和韩文字形。
 #   当 JetBrains Mono 不包含中文字符时，由它负责字体回退，
 #   避免终端、浏览器和 IDE 中的中文显示为方框。
+#
+# fonts-font-awesome
+#   为 Polybar 提供音量、网络、电池、电源和应用标签图标。
+#
+# fcitx5 / fcitx5-chinese-addons
+#   提供中文输入法及拼音组件；Polybar 通过 fcitx5-remote 显示和切换输入状态。
 #
 # polybar
 #   提供可配置的 X11 状态栏，用于显示窗口标题、时间、网络和电池。

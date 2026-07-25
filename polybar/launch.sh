@@ -16,12 +16,30 @@ CONFIG="$HOME/workspace/personal/debian-desktop/polybar/config.ini"
 # 日志写入用户缓存目录，不进入 Git 仓库。
 mkdir -p "$HOME/.cache/polybar"
 
-# 每个已连接的显示器启动一个 Polybar 实例。
-# Anybar 补丁会根据栏的位置，将每个实例绑定到对应的 dwm monitor，
-# 从而让内置屏和外接屏都正确预留顶部空间。
-polybar --list-monitors | cut -d: -f1 | while IFS= read -r monitor; do
+# 每个已连接的显示器启动一个 Polybar 实例。X11 同一会话只能有一个
+# system tray，因此只让 xrandr 标记的主显示器加载 tray 模块。
+monitors="$(polybar --list-monitors)"
+primary_monitor="$(printf '%s\n' "$monitors" | awk '
+    /\(primary\)/ {
+        sub(/:.*/, "", $1)
+        print $1
+        exit
+    }
+')"
+if [ -z "$primary_monitor" ]; then
+    primary_monitor="$(printf '%s\n' "$monitors" | sed -n '1s/:.*//p')"
+fi
+
+printf '%s\n' "$monitors" | while IFS= read -r monitor_line; do
+    monitor="${monitor_line%%:*}"
     [ -n "$monitor" ] || continue
 
-    MONITOR="$monitor" polybar --config="$CONFIG" main \
+    right_modules="input-method brightness pulseaudio wlan battery power"
+    if [ "$monitor" = "$primary_monitor" ]; then
+        right_modules="tray $right_modules"
+    fi
+
+    MONITOR="$monitor" POLYBAR_RIGHT_MODULES="$right_modules" \
+        polybar --config="$CONFIG" main \
         >"$HOME/.cache/polybar/$monitor.log" 2>&1 &
 done

@@ -15,6 +15,21 @@ if [ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ] && command -v dbus-launch >/dev/null 2
     eval "$(dbus-launch --sh-syntax --exit-with-session)"
 fi
 
+# 告诉 D-Bus 和 systemd 用户服务当前是 DWM X11 会话，确保 portal 等
+# 后台服务能够连接 X11 显示。
+export XDG_CURRENT_DESKTOP="dwm"
+export XDG_SESSION_DESKTOP="dwm"
+export XDG_SESSION_TYPE="x11"
+
+if command -v dbus-update-activation-environment >/dev/null 2>&1; then
+    dbus-update-activation-environment --systemd \
+        DISPLAY \
+        XAUTHORITY \
+        XDG_CURRENT_DESKTOP \
+        XDG_SESSION_DESKTOP \
+        XDG_SESSION_TYPE
+fi
+
 # 显式导出输入法环境变量，确保终端、浏览器和 GTK/Qt 应用都能调起 fcitx5。
 export XMODIFIERS="@im=fcitx"
 export GTK_IM_MODULE="fcitx"
