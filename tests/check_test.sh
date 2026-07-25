@@ -16,19 +16,21 @@ for command_name in dwm st dmenu picom polybar startx fcitx5 pipewire wireplumbe
     printf '#!/bin/sh\nexit 0\n' >"$stub_dir/$command_name"
     chmod +x "$stub_dir/$command_name"
 done
+ln -s "$(command -v dirname)" "$stub_dir/dirname"
+ln -s "$(command -v readlink)" "$stub_dir/readlink"
 
 ln -s "$repo_dir/x11/xinitrc" "$test_home/.xinitrc"
 ln -s "$repo_dir/picom/picom.conf" "$test_home/.config/picom/picom.conf"
 ln -s "$repo_dir/polybar/config.ini" "$test_home/.config/polybar/config.ini"
 ln -s "$repo_dir/fontconfig/fonts.conf" "$test_home/.config/fontconfig/fonts.conf"
 
-HOME="$test_home" PATH="$stub_dir:$PATH" "$repo_dir/scripts/check.sh"
+HOME="$test_home" PATH="$stub_dir" "$repo_dir/scripts/check.sh"
 
 rm "$stub_dir/picom"
 rm "$test_home/.config/polybar/config.ini"
 printf 'local config\n' >"$test_home/.config/polybar/config.ini"
 
-if HOME="$test_home" PATH="$stub_dir:$PATH" \
+if HOME="$test_home" PATH="$stub_dir" \
     "$repo_dir/scripts/check.sh" >"$tmp_dir/check.out" 2>&1
 then
     echo "expected missing command and incorrect link to fail" >&2
