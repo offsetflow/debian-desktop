@@ -1,0 +1,17 @@
+# Repository-managed Zsh entrypoint for the Debian dwm environment.
+export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
+
+# Keep OMZ interactive helpers predictable: enable fzf history only.
+export _OMZ_APPLY_PREEXEC_HOOK=false
+export _OMZ_APPLY_CHPWD_HOOK=false
+export _OMZ_APPLY_HISTORYBYFZF=true
+
+if [[ -r "$HOME/.local/share/omz/omz.zsh" ]]; then
+    source "$HOME/.local/share/omz/omz.zsh"
+else
+    print -u2 "zshrc: OMZ is missing; run ~/workspace/personal/debian-desktop/prepare.sh"
+fi
+
+if [[ -x "$HOME/.local/bin/mise" ]]; then
+    eval "$("$HOME/.local/bin/mise" activate zsh)"
+fi
