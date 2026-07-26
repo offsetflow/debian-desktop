@@ -9,7 +9,7 @@ font_pattern='JetBrains Mono:pixelsize=16'
 grep -Fq "static char *font = \"$font_pattern\";" "$ST_DIR/config.def.h"
 
 # st 必须自行控制默认背景透明度，前景文字仍保持完全不透明。
-grep -q 'static float alpha = 0.85;' "$ST_DIR/config.def.h"
+grep -q 'static float alpha = 0xa0 / 255.0f;' "$ST_DIR/config.def.h"
 grep -q 'dc.col\[defaultbg\].color.alpha' "$ST_DIR/x.c"
 
 # ARGB 窗口必须使用 32 位 TrueColor visual 和对应的 pixmap depth。

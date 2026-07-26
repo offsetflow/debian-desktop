@@ -7,7 +7,7 @@
  */
 static char *font = "JetBrains Mono:pixelsize=16";
 static int borderpx = 0;
-static float alpha = 0.85;
+static float alpha = 0xa0 / 255.0f;
 
 /*
  * What program is execed by st depends of these precedence rules:
