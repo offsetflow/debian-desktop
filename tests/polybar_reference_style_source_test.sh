@@ -4,7 +4,7 @@ set -eu
 repo_root="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 config="$repo_root/polybar/config.ini"
 launch="$repo_root/polybar/launch.sh"
-prepare="$repo_root/scripts/prepare-suckless.sh"
+prepare="$repo_root/scripts/prepare-desktop.sh"
 
 fail() {
     printf '%s\n' "FAIL: $*" >&2

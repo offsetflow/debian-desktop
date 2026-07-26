@@ -8,6 +8,8 @@ OMZ_REPOSITORY=${OMZ_REPOSITORY:-https://github.com/yaocccc/omz.git}
 GETENT_BIN=${GETENT_BIN:-getent}
 TARGET_USER=${TARGET_USER:-${SUDO_USER:-$USER}}
 failed=0
+picom_bin="$HOME/.local/bin/picom"
+mise_bin="$HOME/.local/bin/mise"
 
 for command_name in \
     dwm \
@@ -31,6 +33,16 @@ do
         failed=1
     fi
 done
+
+if [ ! -x "$picom_bin" ]; then
+    printf 'check: missing executable: %s\n' "$picom_bin" >&2
+    failed=1
+fi
+
+if [ ! -x "$mise_bin" ]; then
+    printf 'check: missing executable: %s\n' "$mise_bin" >&2
+    failed=1
+fi
 
 check_link() {
     source=$1

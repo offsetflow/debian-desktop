@@ -25,6 +25,20 @@ static const char *colors[][3]      = {
 /* tagging */
 static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
 
+/* Polybar workspace labels, matched case-insensitively against WM_CLASS. */
+static const AppLabel app_labels[] = {
+	{ "St", "   Terminal  " },
+	{ "Google-chrome", "   Chrome  " },
+	{ "Chromium", "   Chromium  " },
+	{ "Firefox", "   Firefox  " },
+	{ "jetbrains-idea", "   IntelliJ IDEA  " },
+	{ "jetbrains-idea-ce", "   IntelliJ IDEA  " },
+	{ "Code", "   Visual Studio Code  " },
+	{ "Thunar", "   Files  " },
+	{ "Pcmanfm", "   Files  " },
+	{ "Nautilus", "   Files  " },
+};
+
 static const Rule rules[] = {
 	/* xprop(1):
 	 *	WM_CLASS(STRING) = instance, class
@@ -70,10 +84,12 @@ static const Layout layouts[] = {
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
 static const char *termcmd[]  = { "st", NULL };
+static const char *mihomoselectcmd[] = { "/bin/sh", "-c", "$HOME/workspace/personal/debian-desktop/mihomo/select.sh --monitor \"$1\"", "mihomo-select", dmenumon, NULL };
 
 static const Key keys[] = {
 	/* modifier                     key        function        argument */
 	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
+	{ MODKEY|ShiftMask,             XK_p,      spawn,          {.v = mihomoselectcmd } },
 	{ MODKEY,                       XK_a,      previewallwin,  {0} },
 	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },

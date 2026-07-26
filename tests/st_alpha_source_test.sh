@@ -6,11 +6,9 @@ PICOM_CONF=${2:-picom/picom.conf}
 
 # 字体渲染细节交给系统 Fontconfig，st 只固定字体与像素尺寸。
 font_pattern='JetBrains Mono:pixelsize=16'
-grep -Fq "static char *font = \"$font_pattern\";" "$ST_DIR/config.h"
 grep -Fq "static char *font = \"$font_pattern\";" "$ST_DIR/config.def.h"
 
 # st 必须自行控制默认背景透明度，前景文字仍保持完全不透明。
-grep -q 'static float alpha = 0.85;' "$ST_DIR/config.h"
 grep -q 'static float alpha = 0.85;' "$ST_DIR/config.def.h"
 grep -q 'dc.col\[defaultbg\].color.alpha' "$ST_DIR/x.c"
 

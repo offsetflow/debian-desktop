@@ -41,7 +41,10 @@ for package_name in \
     fcitx5-chinese-addons \
     pipewire-pulse \
     fonts-font-awesome \
+    fonts-noto-color-emoji \
     git \
+    curl \
+    ca-certificates \
     zsh \
     fzf \
     fd-find \

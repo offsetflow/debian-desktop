@@ -125,7 +125,7 @@ static const char *colorname[] = {
  */
 unsigned int defaultfg = 257;
 unsigned int defaultbg = 256;
-static unsigned int defaultcs = 257;
+unsigned int defaultcs = 257;
 static unsigned int defaultrcs = 256;
 
 /*
@@ -196,6 +196,7 @@ static Shortcut shortcuts[] = {
 /*
  * State bits to ignore when matching key or button events.
  */
+static KeySym mappedkeys[] = { -1 };
 static uint ignoremod = Mod2Mask|XK_SWITCH_MOD;
 
 /* key definitions — see st.info for terminfo entries */

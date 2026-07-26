@@ -9,6 +9,7 @@ test_home="$test_root/home"
 test_repo="$test_home/workspace/personal/debian-desktop"
 test_bin="$test_root/bin"
 captured_env="$test_root/dwm.env"
+xrdb_log="$test_root/xrdb.log"
 
 mkdir -p \
     "$test_repo/x11" \
@@ -31,7 +32,7 @@ done
 
 cat >"$test_bin/xrdb" <<'EOF'
 #!/bin/sh
-exit 0
+printf '%s\n' "$*" >>"$XRDB_LOG"
 EOF
 chmod +x "$test_bin/xrdb"
 
@@ -54,7 +55,23 @@ env \
     PATH="$test_bin:/usr/bin:/bin" \
     DBUS_SESSION_BUS_ADDRESS="unix:path=$test_root/dbus" \
     CAPTURED_ENV="$captured_env" \
+    XRDB_LOG="$xrdb_log" \
     "$test_repo/x11/xinitrc"
+
+if [[ -e "$xrdb_log" ]]; then
+    echo "xinitrc loaded missing .Xresources" >&2
+    exit 1
+fi
+
+: >"$test_home/.Xresources"
+env \
+    HOME="$test_home" \
+    PATH="$test_bin:/usr/bin:/bin" \
+    DBUS_SESSION_BUS_ADDRESS="unix:path=$test_root/dbus" \
+    CAPTURED_ENV="$captured_env" \
+    XRDB_LOG="$xrdb_log" \
+    "$test_repo/x11/xinitrc"
+grep -Fqx -- "-merge $test_home/.Xresources" "$xrdb_log"
 
 assert_env() {
     expected=$1

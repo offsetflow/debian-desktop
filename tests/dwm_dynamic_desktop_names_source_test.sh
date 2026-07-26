@@ -3,7 +3,7 @@ set -eu
 
 repo_root="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 dwm_c="$repo_root/suckless/dwm/dwm.c"
-config_h="$repo_root/suckless/dwm/config.h"
+config_h="$repo_root/suckless/dwm/config.def.h"
 
 fail() {
     printf '%s\n' "FAIL: $*" >&2

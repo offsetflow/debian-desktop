@@ -7,6 +7,11 @@
 /suckless/dmenu/dmenu
 /suckless/dmenu/stest
 
+# suckless 由唯一配置源 config.def.h 生成的构建配置
+/suckless/dwm/config.h
+/suckless/st/config.h
+/suckless/dmenu/config.h
+
 # suckless 的打包产物
 /suckless/dwm/*.tar.gz
 /suckless/st/*.tar.gz

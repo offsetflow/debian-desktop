@@ -4,7 +4,8 @@
 set -e
 
 # 本仓库目录。
-DESKTOP_DIR="$HOME/workspace/personal/debian-desktop"
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+DESKTOP_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 
 # suckless 源码统一存放位置。
 SUCKLESS_DIR="$DESKTOP_DIR/suckless"
@@ -24,11 +25,14 @@ for name in $PROGRAMS; do
     target="$SUCKLESS_DIR/$name"
 
     if [ ! -d "$target" ]; then
-        echo "==> 跳过 $name：源码不存在，请先运行 prepare-suckless.sh"
+        echo "install-suckless: missing source directory: $target" >&2
         continue
     fi
 
     echo "==> 编译并安装 $name 到 $PREFIX/bin"
+
+    # config.def.h 是唯一受版本控制的配置源；config.h 只用于本次构建。
+    cp "$target/config.def.h" "$target/config.h"
 
     # clean 强制重新编译，确保源码改动生效；install 依赖 all 会自动构建。
     # 命令行传入的 PREFIX/MANPREFIX 会覆盖 config.mk 中的默认值。

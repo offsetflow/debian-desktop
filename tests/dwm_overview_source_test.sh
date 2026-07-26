@@ -3,7 +3,7 @@ set -eu
 
 DWM_C=${1:-suckless/dwm/dwm.c}
 DWM_DIR=$(dirname "$DWM_C")
-CONFIG_H="$DWM_DIR/config.h"
+CONFIG_H="$DWM_DIR/config.def.h"
 CONFIG_MK="$DWM_DIR/config.mk"
 
 # Overview 必须具备预览状态、入口函数、截图缩放和 XRender 链接。

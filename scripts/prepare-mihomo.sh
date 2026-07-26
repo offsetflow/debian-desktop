@@ -9,6 +9,13 @@ CONFIG_DIR="$HOME/.config/mihomo"
 DESKTOP_DIR="$HOME/workspace/personal/debian-desktop"
 UPDATE_SCRIPT="$DESKTOP_DIR/mihomo/update-profile.sh"
 
+for required_command in curl jq gzip mktemp head; do
+    if ! command -v "$required_command" >/dev/null 2>&1; then
+        printf 'prepare-mihomo: missing command: %s\n' "$required_command" >&2
+        exit 1
+    fi
+done
+
 mkdir -p "$HOME/.local/bin" "$CONFIG_DIR" "$CONFIG_DIR/profiles" "$CONFIG_DIR/logs"
 
 echo "==> 查询 mihomo 最新版本"

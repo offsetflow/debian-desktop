@@ -21,21 +21,39 @@ connected_outputs=$(xrandr --query | awk '$2 == "connected" { print $1 }')
 internal_output=
 external_output=
 
+# 优先使用标准的笔记本面板名称，避免把 DisplayPort 外屏误判为内屏。
 for output in $connected_outputs; do
     case "$output" in
-        eDP*|LVDS*|DSI*|DP-*)
-            [ -n "$internal_output" ] || internal_output=$output
-            ;;
-        *)
-            [ -n "$external_output" ] || external_output=$output
+        eDP*|LVDS*|DSI*)
+            internal_output=$output
+            break
             ;;
     esac
 done
+
+# NVIDIA 驱动可能把笔记本内屏命名为 DP-*；仅在没有标准名称时回退。
+if [ -z "$internal_output" ]; then
+    for output in $connected_outputs; do
+        case "$output" in
+            DP-*)
+                internal_output=$output
+                break
+                ;;
+        esac
+    done
+fi
 
 if [ -z "$internal_output" ]; then
     echo "setup-monitors: no connected laptop display found" >&2
     exit 1
 fi
+
+for output in $connected_outputs; do
+    if [ "$output" != "$internal_output" ]; then
+        external_output=$output
+        break
+    fi
+done
 
 if [ -z "$external_output" ]; then
     xrandr --output "$internal_output" --primary --auto

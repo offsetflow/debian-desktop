@@ -58,8 +58,10 @@ fi
 # launch.sh 会先结束旧进程，避免重复启动多个 Picom 实例。
 "$HOME/workspace/personal/debian-desktop/picom/launch.sh"
 
-# 载入 Xresources，应用字体渲染等 Xft 配置。
-xrdb -merge "$HOME/.Xresources"
+# 用户自行提供 Xresources 时才载入；仓库不维护空置的 Xresources。
+if [ -r "$HOME/.Xresources" ] && command -v xrdb >/dev/null 2>&1; then
+    xrdb -merge "$HOME/.Xresources"
+fi
 
 # 由 startx 启动 dwm。
 # 优先使用当前用户下的编译结果，避免依赖系统目录里的旧版本。

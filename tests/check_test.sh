@@ -21,6 +21,10 @@ do
     printf '#!/bin/sh\nexit 0\n' >"$stub_dir/$command_name"
     chmod +x "$stub_dir/$command_name"
 done
+printf '#!/bin/sh\nexit 0\n' >"$test_home/.local/bin/picom"
+chmod +x "$test_home/.local/bin/picom"
+printf '#!/bin/sh\nexit 0\n' >"$test_home/.local/bin/mise"
+chmod +x "$test_home/.local/bin/mise"
 ln -s "$(command -v dirname)" "$stub_dir/dirname"
 ln -s "$(command -v readlink)" "$stub_dir/readlink"
 ln -s "$(command -v git)" "$stub_dir/git"
@@ -58,7 +62,8 @@ GETENT_BIN="$stub_dir/getent" \
 ZSH_PATH="$stub_dir/zsh" \
     "$repo_dir/scripts/check.sh"
 
-rm "$stub_dir/picom"
+rm "$test_home/.local/bin/picom"
+rm "$test_home/.local/bin/mise"
 rm "$test_home/.config/polybar/config.ini"
 printf 'local config\n' >"$test_home/.config/polybar/config.ini"
 printf 'drift\n' >>"$omz_dir/omz.zsh"
@@ -78,7 +83,8 @@ then
     exit 1
 fi
 
-grep -Fq 'check: missing command: picom' "$tmp_dir/check.out"
+grep -Fq "check: missing executable: $test_home/.local/bin/picom" "$tmp_dir/check.out"
+grep -Fq "check: missing executable: $test_home/.local/bin/mise" "$tmp_dir/check.out"
 grep -Fq "check: incorrect link: $test_home/.config/polybar/config.ini" \
     "$tmp_dir/check.out"
 grep -Fq 'check: OMZ version mismatch:' "$tmp_dir/check.out"

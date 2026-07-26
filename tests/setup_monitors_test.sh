@@ -13,15 +13,30 @@ if [ "${1:-}" = "--query" ]; then
     if [ "${XRANDR_SCENARIO:-dual}" = "internal" ]; then
         cat <<'OUTPUT'
 Screen 0: minimum 8 x 8, current 2560 x 1600, maximum 32767 x 32767
-DP-2 connected primary 2560x1600+0+0 (normal left inverted right x axis y axis) 344mm x 194mm
+eDP-1 connected primary 2560x1600+0+0 (normal left inverted right x axis y axis) 344mm x 194mm
+OUTPUT
+        exit 0
+    fi
+    if [ "${XRANDR_SCENARIO:-dual}" = "hdmi" ]; then
+        cat <<'OUTPUT'
+Screen 0: minimum 8 x 8, current 4480 x 1440, maximum 32767 x 32767
+eDP-1 connected 2560x1600+1920+0 (normal left inverted right x axis y axis) 344mm x 194mm
+HDMI-0 connected 1920x1080+0+0 (normal left inverted right x axis y axis) 527mm x 296mm
+OUTPUT
+        exit 0
+    fi
+    if [ "${XRANDR_SCENARIO:-dual}" = "nvidia" ]; then
+        cat <<'OUTPUT'
+Screen 0: minimum 8 x 8, current 4480 x 1440, maximum 32767 x 32767
+DP-2 connected 2560x1600+1920+0 (normal left inverted right x axis y axis) 344mm x 194mm
+HDMI-0 connected 1920x1080+0+0 (normal left inverted right x axis y axis) 527mm x 296mm
 OUTPUT
         exit 0
     fi
     cat <<'OUTPUT'
 Screen 0: minimum 8 x 8, current 4480 x 1440, maximum 32767 x 32767
-DP-2 connected 2560x1600+1920+0 (normal left inverted right x axis y axis) 344mm x 194mm
-HDMI-0 connected 1920x1080+0+0 (normal left inverted right x axis y axis) 527mm x 296mm
-DP-1 disconnected (normal left inverted right x axis y axis)
+eDP-1 connected 2560x1600+1920+0 (normal left inverted right x axis y axis) 344mm x 194mm
+DP-1 connected 1920x1080+0+0 (normal left inverted right x axis y axis) 527mm x 296mm
 OUTPUT
     exit 0
 fi
@@ -36,15 +51,23 @@ export XRANDR_SCENARIO=dual
 
 : >"$XRANDR_LOG"
 "$script" left
-grep -Fx -- '--output HDMI-0 --primary --auto --left-of DP-2 --output DP-2 --auto' "$XRANDR_LOG" >/dev/null
+grep -Fx -- '--output DP-1 --primary --auto --left-of eDP-1 --output eDP-1 --auto' "$XRANDR_LOG" >/dev/null
 
 : >"$XRANDR_LOG"
 "$script" right
-grep -Fx -- '--output HDMI-0 --primary --auto --right-of DP-2 --output DP-2 --auto' "$XRANDR_LOG" >/dev/null
+grep -Fx -- '--output DP-1 --primary --auto --right-of eDP-1 --output eDP-1 --auto' "$XRANDR_LOG" >/dev/null
+
+: >"$XRANDR_LOG"
+XRANDR_SCENARIO=hdmi "$script" left
+grep -Fx -- '--output HDMI-0 --primary --auto --left-of eDP-1 --output eDP-1 --auto' "$XRANDR_LOG" >/dev/null
 
 : >"$XRANDR_LOG"
 XRANDR_SCENARIO=internal "$script" left
-grep -Fx -- '--output DP-2 --primary --auto' "$XRANDR_LOG" >/dev/null
+grep -Fx -- '--output eDP-1 --primary --auto' "$XRANDR_LOG" >/dev/null
+
+: >"$XRANDR_LOG"
+XRANDR_SCENARIO=nvidia "$script" left
+grep -Fx -- '--output HDMI-0 --primary --auto --left-of DP-2 --output DP-2 --auto' "$XRANDR_LOG" >/dev/null
 
 if "$script" top >/dev/null 2>&1; then
     echo "invalid position unexpectedly succeeded" >&2

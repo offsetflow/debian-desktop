@@ -11,6 +11,10 @@ grep -Fq 'export _OMZ_APPLY_CHPWD_HOOK=false' "$zshrc"
 grep -Fq 'export _OMZ_APPLY_HISTORYBYFZF=true' "$zshrc"
 grep -Fq '$HOME/.local/share/omz/omz.zsh' "$zshrc"
 grep -Fq '"$HOME/.local/bin/mise" activate zsh' "$zshrc"
+if grep -Eq '/home/dev|opencode' "$zshrc"; then
+    echo "zshrc contains a user-specific PATH" >&2
+    exit 1
+fi
 
 expected_version=3a2df05e6bff546da0d252290bbba333475ad4a0
 [[ $(wc -l <"$version_file") -eq 1 ]]

@@ -2,6 +2,7 @@
 
 CONFIG="$HOME/workspace/personal/debian-desktop/picom/picom.conf"
 LOG="$HOME/.cache/picom/picom.log"
+PICOM_BIN=${PICOM_BIN:-"$HOME/.local/bin/picom"}
 
 # Avoid duplicate compositor instances when X is restarted.
 pkill -x picom >/dev/null 2>&1 || true
@@ -14,4 +15,4 @@ while pgrep -x picom >/dev/null 2>&1 && [ "$count" -lt 30 ]; do
 done
 
 mkdir -p "$(dirname "$LOG")"
-/usr/local/bin/picom --config "$CONFIG" >"$LOG" 2>&1 &
+"$PICOM_BIN" --config "$CONFIG" >"$LOG" 2>&1 &

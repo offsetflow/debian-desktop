@@ -8,6 +8,7 @@
 |---|---|
 | `Alt + Shift + Enter` | 打开 `st` 终端 |
 | `Alt + P` | 打开 `dmenu` 程序启动器 |
+| `Alt + Shift + P` | 选择 Mihomo 策略组和节点 |
 | `Alt + Shift + C` | 关闭当前窗口 |
 | `Alt + Shift + Q` | 退出 dwm |
 | `Alt + B` | 显示或隐藏 Polybar |

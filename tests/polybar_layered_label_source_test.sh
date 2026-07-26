@@ -4,7 +4,7 @@ set -eu
 repo_root="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 polybar_config="$repo_root/polybar/config.ini"
 picom_config="$repo_root/picom/picom.conf"
-prepare_script="$repo_root/scripts/prepare-suckless.sh"
+prepare_script="$repo_root/scripts/prepare-desktop.sh"
 
 fail() {
     printf '%s\n' "FAIL: $*" >&2

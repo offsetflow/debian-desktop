@@ -28,6 +28,7 @@ EOF
 
 for stage_name in \
     prepare-desktop.sh \
+    prepare-mise.sh \
     install-suckless.sh \
     install-picom.sh \
     install-omz.sh \
@@ -45,6 +46,7 @@ done
 
 cat >"$tmp_dir/expected.log" <<'EOF'
 prepare-desktop.sh
+prepare-mise.sh
 install-suckless.sh
 install-picom.sh
 install-omz.sh
@@ -64,6 +66,7 @@ fi
 
 cat >"$tmp_dir/expected-failure.log" <<'EOF'
 prepare-desktop.sh
+prepare-mise.sh
 install-suckless.sh
 install-picom.sh
 install-omz.sh

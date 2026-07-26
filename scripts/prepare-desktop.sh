@@ -36,10 +36,11 @@ desktop_runtime=(
     lua5.4
 )
 
-# 桌面字体：终端与界面字体、CJK 回退字体和 Polybar 图标字体。
+# 桌面字体：终端与界面字体、CJK 与 Emoji 回退字体和 Polybar 图标字体。
 fonts=(
     fonts-jetbrains-mono
     fonts-noto-cjk
+    fonts-noto-color-emoji
     fonts-font-awesome
 )
 
@@ -47,6 +48,8 @@ fonts=(
 build_tools=(
     build-essential
     git
+    curl
+    ca-certificates
     pkg-config
     meson
     ninja-build

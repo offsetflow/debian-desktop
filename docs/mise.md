@@ -4,19 +4,18 @@
 
 ## 安装策略
 
-安装脚本：
+主安装入口会自动安装 mise：
 
 ```bash
-~/workspace/personal/debian-desktop/scripts/prepare-mise.sh
+~/workspace/personal/debian-desktop/prepare.sh
 ```
 
-这个脚本只做三件事：
+其中的 mise 安装步骤只做两件事：
 
 1. 安装 `mise` 本体到 `~/.local/bin/mise`
-2. 把 `~/.local/bin` 和 `~/.local/share/mise/shims` 写入 `~/.profile`
-3. 把 `mise activate bash` 写入 `~/.bashrc`
+2. 创建 `~/.config/mise`
 
-它不会安装 Java、Node、Python、Go、Rust 等语言版本。
+它不会修改 `~/.profile` 或 `~/.bashrc`，也不会安装 Java、Node、Python、Go、Rust 等语言版本。PATH 和 Zsh 激活由仓库管理的 `shell/zshrc` 统一提供。
 
 ## 为什么不一次性安装所有语言
 
@@ -41,15 +40,6 @@ mise --version
 ```bash
 mise doctor
 ```
-
-如果在 SSH 非交互命令里看到 `activated: no`，但同时看到：
-
-```text
-shims_on_path: yes
-No problems found
-```
-
-这是可以接受的。真正打开终端时，`~/.bashrc` 会执行 `mise activate bash`。
 
 查看当前启用的语言版本：
 

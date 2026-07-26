@@ -2,7 +2,7 @@
 set -eu
 
 DWM_C=${1:-suckless/dwm/dwm.c}
-CONFIG_H="$(dirname "$DWM_C")/config.h"
+CONFIG_H="$(dirname "$DWM_C")/config.def.h"
 
 # 最小 gaps：配置、开关和统一调整函数必须存在。
 grep -q "static const unsigned int gappih" "$CONFIG_H"
