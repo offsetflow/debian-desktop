@@ -3,11 +3,15 @@
 dmenu \- dynamic menu
 .SH SYNOPSIS
 .B dmenu
-.RB [ \-bfiv ]
+.RB [ \-bFcfiv ]
 .RB [ \-l
 .IR lines ]
+.RB [ \-h
+.IR height ]
 .RB [ \-m
 .IR monitor ]
+.RB [ \-bw
+.IR width ]
 .RB [ \-p
 .IR prompt ]
 .RB [ \-fn
@@ -19,6 +23,14 @@ dmenu \- dynamic menu
 .RB [ \-sb
 .IR color ]
 .RB [ \-sf
+.IR color ]
+.RB [ \-nhb
+.IR color ]
+.RB [ \-nhf
+.IR color ]
+.RB [ \-shb
+.IR color ]
+.RB [ \-shf
 .IR color ]
 .RB [ \-ob
 .IR color ]
@@ -44,6 +56,12 @@ which lists programs in the user's $PATH and runs the result in their $SHELL.
 .B \-b
 dmenu appears at the bottom of the screen.
 .TP
+.B \-c
+dmenu appears centered on the selected monitor.
+.TP
+.B \-F
+disables fuzzy matching.
+.TP
 .B \-f
 dmenu grabs the keyboard before reading stdin if not reading from a tty. This
 is faster, but will lock up X until stdin reaches end\-of\-file.
@@ -54,9 +72,15 @@ dmenu matches menu items case insensitively.
 .BI \-l " lines"
 dmenu lists items vertically, with the given number of lines.
 .TP
+.BI \-h " height"
+sets the minimum menu line height in pixels.
+.TP
 .BI \-m " monitor"
 dmenu is displayed on the monitor number supplied. Monitor numbers are starting
 from 0.
+.TP
+.BI \-bw " width"
+sets the window border width in pixels.
 .TP
 .BI \-p " prompt"
 defines the prompt to be displayed to the left of the input field.
@@ -78,6 +102,18 @@ defines the selected background color.
 .TP
 .BI \-sf " color"
 defines the selected foreground color.
+.TP
+.BI \-nhb " color"
+defines the normal highlight background color.
+.TP
+.BI \-nhf " color"
+defines the normal highlight foreground color.
+.TP
+.BI \-shb " color"
+defines the selected highlight background color.
+.TP
+.BI \-shf " color"
+defines the selected highlight foreground color.
 .TP
 .BI \-ob " color"
 defines the outline background color (for multiple selection).

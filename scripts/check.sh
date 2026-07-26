@@ -21,6 +21,7 @@ for command_name in \
     fcitx5 \
     pipewire \
     wireplumber \
+    flameshot \
     feh \
     nsxiv \
     thunar \

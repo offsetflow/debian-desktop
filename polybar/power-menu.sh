@@ -4,7 +4,7 @@ dmenu_bin="${DMENU_BIN:-dmenu}"
 systemctl_bin="${SYSTEMCTL_BIN:-systemctl}"
 pkill_bin="${PKILL_BIN:-pkill}"
 
-choice="$(printf '%s\n' Suspend Logout Reboot Shutdown | "$dmenu_bin" -i -p "Power")"
+choice="$(printf '%s\n' Suspend Logout Reboot Shutdown | "$dmenu_bin" -i -p "  Power")"
 
 case "$choice" in
     Suspend)

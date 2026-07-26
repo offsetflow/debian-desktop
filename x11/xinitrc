@@ -52,6 +52,11 @@ if command -v fcitx5 >/dev/null 2>&1; then
     fcitx5 -rd >/dev/null 2>&1 || true
 fi
 
+# 常驻 Flameshot，使 PrintScreen 截图写入 X11 剪贴板后能够继续粘贴。
+if command -v flameshot >/dev/null 2>&1; then
+    flameshot >/dev/null 2>&1 &
+fi
+
 # 设置桌面壁纸。脚本执行完成后 feh 不需要常驻。
 "$HOME/workspace/personal/debian-desktop/wallpapers/set-wallpaper.sh"
 
