@@ -1,0 +1,3 @@
+#!/bin/sh
+
+exec "$HOME/workspace/personal/debian-desktop/x11/xinitrc" "$@"

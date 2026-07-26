@@ -30,6 +30,17 @@ assert_link "$test_home/.zshrc" "$repo_dir/shell/zshrc"
 # A second run must leave already-correct links untouched.
 HOME="$test_home" "$repo_dir/scripts/deploy.sh"
 
+# The exact repository-generated legacy entry must migrate to the managed link.
+legacy_home=$(mktemp -d)
+cat >"$legacy_home/.xinitrc" <<'EOF'
+#!/bin/sh
+
+exec "$HOME/workspace/personal/debian-desktop/x11/xinitrc" "$@"
+EOF
+HOME="$legacy_home" "$repo_dir/scripts/deploy.sh"
+assert_link "$legacy_home/.xinitrc" "$repo_dir/x11/xinitrc"
+rm -rf "$legacy_home"
+
 # An existing user-owned file must never be overwritten.
 rm "$test_home/.xinitrc"
 printf 'personal config\n' >"$test_home/.xinitrc"
