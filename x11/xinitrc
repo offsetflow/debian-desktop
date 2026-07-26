@@ -10,6 +10,16 @@ if [ -x "$HOME/workspace/personal/debian-desktop/mihomo/start.sh" ]; then
     "$HOME/workspace/personal/debian-desktop/mihomo/start.sh" >/dev/null 2>&1 || true
 fi
 
+# 让 dwm 及其启动的应用默认使用本机 mihomo 代理。
+export http_proxy="http://127.0.0.1:7890"
+export https_proxy="http://127.0.0.1:7890"
+export HTTP_PROXY="http://127.0.0.1:7890"
+export HTTPS_PROXY="http://127.0.0.1:7890"
+export all_proxy="socks5://127.0.0.1:7890"
+export ALL_PROXY="socks5://127.0.0.1:7890"
+export no_proxy="127.0.0.1,localhost,::1"
+export NO_PROXY="127.0.0.1,localhost,::1"
+
 # 最小 startx 会话里通常没有桌面环境代为初始化 D-Bus，会影响输入法和配置工具。
 if [ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ] && command -v dbus-launch >/dev/null 2>&1; then
     eval "$(dbus-launch --sh-syntax --exit-with-session)"
