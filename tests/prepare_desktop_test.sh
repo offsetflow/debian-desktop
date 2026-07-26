@@ -41,6 +41,11 @@ for package_name in \
     fcitx5-chinese-addons \
     pipewire-pulse \
     fonts-font-awesome \
+    git \
+    zsh \
+    fzf \
+    fd-find \
+    lua5.4 \
     meson \
     libdbus-1-dev \
     libepoxy-dev

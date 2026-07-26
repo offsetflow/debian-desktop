@@ -30,7 +30,9 @@ for stage_name in \
     prepare-desktop.sh \
     install-suckless.sh \
     install-picom.sh \
+    install-omz.sh \
     deploy.sh \
+    set-default-shell.sh \
     check.sh
 do
     create_stage "$stage_name"
@@ -45,13 +47,15 @@ cat >"$tmp_dir/expected.log" <<'EOF'
 prepare-desktop.sh
 install-suckless.sh
 install-picom.sh
+install-omz.sh
 deploy.sh
+set-default-shell.sh
 check.sh
 EOF
 diff -u "$tmp_dir/expected.log" "$command_log"
 
 : >"$command_log"
-if PATH="$stub_dir:$PATH" STAGE_LOG="$command_log" FAIL_STAGE=install-picom.sh \
+if PATH="$stub_dir:$PATH" STAGE_LOG="$command_log" FAIL_STAGE=install-omz.sh \
     "$fixture_repo/prepare.sh" >"$tmp_dir/prepare.out" 2>&1
 then
     echo "expected a failed stage to stop prepare.sh" >&2
@@ -62,6 +66,7 @@ cat >"$tmp_dir/expected-failure.log" <<'EOF'
 prepare-desktop.sh
 install-suckless.sh
 install-picom.sh
+install-omz.sh
 EOF
 diff -u "$tmp_dir/expected-failure.log" "$command_log"
 
