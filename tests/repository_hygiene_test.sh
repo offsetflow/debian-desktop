@@ -7,6 +7,7 @@ for removed_path in \
     scripts/prepare-suckless.sh \
     wallpapers/dark-fluid-ultrawide.png \
     wallpapers/wallhaven-gw2gyq-1920x1080.png \
+    wallpapers/wallhaven-j3qq15_1920x1080.png \
     wallpapers/wallhaven-xedleo_3000x1687.png
 do
     if [[ -e "$repo_dir/$removed_path" ]]; then
@@ -15,10 +16,10 @@ do
     fi
 done
 
-[[ -f "$repo_dir/wallpapers/wallhaven-j3qq15_1920x1080.png" ]]
+[[ -f "$repo_dir/wallpapers/wallhaven-o5zmwm_1920x1080.png" ]]
 
 if rg -n \
-    'prepare-suckless|dark-fluid-ultrawide|wallhaven-gw2gyq|wallhaven-xedleo' \
+    'prepare-suckless|dark-fluid-ultrawide|wallhaven-gw2gyq|wallhaven-j3qq15|wallhaven-xedleo' \
     "$repo_dir" \
     --glob '!docs/superpowers/plans/2026-07-26-clean-bootstrap.md' \
     --glob '!docs/superpowers/specs/2026-07-26-clean-bootstrap-design.md' \

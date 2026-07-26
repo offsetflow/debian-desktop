@@ -16,7 +16,7 @@ mkdir -p "$test_home/.config/picom" \
 
 for command_name in \
     dwm st dmenu picom polybar startx fcitx5 pipewire wireplumber \
-    zsh fzf fd lua fdfind
+    feh nsxiv thunar zsh fzf fd lua fdfind
 do
     printf '#!/bin/sh\nexit 0\n' >"$stub_dir/$command_name"
     chmod +x "$stub_dir/$command_name"
@@ -38,6 +38,7 @@ ln -s "$repo_dir/x11/xinitrc" "$test_home/.xinitrc"
 ln -s "$repo_dir/picom/picom.conf" "$test_home/.config/picom/picom.conf"
 ln -s "$repo_dir/polybar/config.ini" "$test_home/.config/polybar/config.ini"
 ln -s "$repo_dir/fontconfig/fonts.conf" "$test_home/.config/fontconfig/fonts.conf"
+ln -s "$repo_dir/x11/mimeapps.list" "$test_home/.config/mimeapps.list"
 ln -s "$repo_dir/shell/zshrc" "$test_home/.zshrc"
 ln -s "$stub_dir/fdfind" "$test_home/.local/bin/fd"
 

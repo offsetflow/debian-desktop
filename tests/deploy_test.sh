@@ -25,6 +25,7 @@ assert_link "$test_home/.xinitrc" "$repo_dir/x11/xinitrc"
 assert_link "$test_home/.config/picom/picom.conf" "$repo_dir/picom/picom.conf"
 assert_link "$test_home/.config/polybar/config.ini" "$repo_dir/polybar/config.ini"
 assert_link "$test_home/.config/fontconfig/fonts.conf" "$repo_dir/fontconfig/fonts.conf"
+assert_link "$test_home/.config/mimeapps.list" "$repo_dir/x11/mimeapps.list"
 assert_link "$test_home/.zshrc" "$repo_dir/shell/zshrc"
 
 # A second run must leave already-correct links untouched.
@@ -40,6 +41,14 @@ EOF
 HOME="$legacy_home" "$repo_dir/scripts/deploy.sh"
 assert_link "$legacy_home/.xinitrc" "$repo_dir/x11/xinitrc"
 rm -rf "$legacy_home"
+
+# The current unmanaged MIME defaults must migrate without losing associations.
+mime_home=$(mktemp -d)
+mkdir -p "$mime_home/.config"
+cp "$repo_dir/x11/mimeapps.list.legacy" "$mime_home/.config/mimeapps.list"
+HOME="$mime_home" "$repo_dir/scripts/deploy.sh"
+assert_link "$mime_home/.config/mimeapps.list" "$repo_dir/x11/mimeapps.list"
+rm -rf "$mime_home"
 
 # An existing user-owned file must never be overwritten.
 rm "$test_home/.xinitrc"

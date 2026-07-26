@@ -84,12 +84,16 @@ static const Layout layouts[] = {
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
 static const char *termcmd[]  = { "st", NULL };
+static const char *filecmd[]  = { "thunar", NULL };
 static const char *mihomoselectcmd[] = { "/bin/sh", "-c", "$HOME/workspace/personal/debian-desktop/mihomo/select.sh --monitor \"$1\"", "mihomo-select", dmenumon, NULL };
+static const char *wallpaperselectcmd[] = { "/bin/sh", "-c", "$HOME/workspace/personal/debian-desktop/wallpapers/select-wallpaper.sh", NULL };
 
 static const Key keys[] = {
 	/* modifier                     key        function        argument */
 	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
+	{ MODKEY,                       XK_e,      spawn,          {.v = filecmd } },
 	{ MODKEY|ShiftMask,             XK_p,      spawn,          {.v = mihomoselectcmd } },
+	{ MODKEY|ShiftMask,             XK_w,      spawn,          {.v = wallpaperselectcmd } },
 	{ MODKEY,                       XK_a,      previewallwin,  {0} },
 	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },

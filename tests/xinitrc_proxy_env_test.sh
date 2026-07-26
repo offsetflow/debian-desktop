@@ -10,6 +10,7 @@ test_repo="$test_home/workspace/personal/debian-desktop"
 test_bin="$test_root/bin"
 captured_env="$test_root/dwm.env"
 xrdb_log="$test_root/xrdb.log"
+fcitx_log="$test_root/fcitx.log"
 
 mkdir -p \
     "$test_repo/x11" \
@@ -42,6 +43,12 @@ exit 0
 EOF
 chmod +x "$test_bin/dbus-update-activation-environment"
 
+cat >"$test_bin/fcitx5" <<'EOF'
+#!/bin/sh
+printf '%s\n' "$*" >>"$FCITX_LOG"
+EOF
+chmod +x "$test_bin/fcitx5"
+
 cat >"$test_home/.local/bin/dwm" <<'EOF'
 #!/bin/sh
 env >"$CAPTURED_ENV"
@@ -55,6 +62,7 @@ env \
     PATH="$test_bin:/usr/bin:/bin" \
     DBUS_SESSION_BUS_ADDRESS="unix:path=$test_root/dbus" \
     CAPTURED_ENV="$captured_env" \
+    FCITX_LOG="$fcitx_log" \
     XRDB_LOG="$xrdb_log" \
     "$test_repo/x11/xinitrc"
 
@@ -69,9 +77,15 @@ env \
     PATH="$test_bin:/usr/bin:/bin" \
     DBUS_SESSION_BUS_ADDRESS="unix:path=$test_root/dbus" \
     CAPTURED_ENV="$captured_env" \
+    FCITX_LOG="$fcitx_log" \
     XRDB_LOG="$xrdb_log" \
     "$test_repo/x11/xinitrc"
 grep -Fqx -- "-merge $test_home/.Xresources" "$xrdb_log"
+
+if [[ $(grep -Fxc -- "-rd" "$fcitx_log") -ne 2 ]]; then
+    echo "xinitrc did not replace stale fcitx5 for every X session" >&2
+    exit 1
+fi
 
 assert_env() {
     expected=$1

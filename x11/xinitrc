@@ -46,9 +46,10 @@ export GTK_IM_MODULE="fcitx"
 export QT_IM_MODULE="fcitx"
 export SDL_IM_MODULE="fcitx"
 
-# fcitx5 已运行时跳过；启动失败也不阻塞 dwm 会话。
+# 每个 X11 会话都替换遗留的 fcitx5，确保 XIM 注册到当前 X Server。
+# 否则旧进程仍可服务使用 D-Bus 的浏览器，但 st 等 XIM 客户端无法输入中文。
 if command -v fcitx5 >/dev/null 2>&1; then
-    pgrep -u "$USER" -x fcitx5 >/dev/null 2>&1 || fcitx5 -d >/dev/null 2>&1 || true
+    fcitx5 -rd >/dev/null 2>&1 || true
 fi
 
 # 设置桌面壁纸。脚本执行完成后 feh 不需要常驻。

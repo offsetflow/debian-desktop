@@ -42,6 +42,11 @@ for package_name in \
     pipewire-pulse \
     fonts-font-awesome \
     fonts-noto-color-emoji \
+    feh \
+    nsxiv \
+    thunar \
+    gvfs \
+    tumbler \
     git \
     curl \
     ca-certificates \

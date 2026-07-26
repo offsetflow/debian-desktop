@@ -18,8 +18,9 @@ x11_runtime=(
     dbus-x11
 )
 
-# 桌面运行依赖：状态栏、中文输入法、现代音频栈、音量控制、壁纸，
-# 以及 OMZ 所需的 Zsh、模糊搜索、文件搜索和 Lua。
+# 桌面运行依赖：状态栏、中文输入法、现代音频栈、音量控制、壁纸设置与预览、
+# 带回收站和图片缩略图支持的文件管理器，以及 OMZ 所需的 Zsh、模糊搜索、
+# 文件搜索和 Lua。
 desktop_runtime=(
     polybar
     fcitx5
@@ -30,6 +31,10 @@ desktop_runtime=(
     pavucontrol
     pamixer
     feh
+    nsxiv
+    thunar
+    gvfs
+    tumbler
     zsh
     fzf
     fd-find

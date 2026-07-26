@@ -2,13 +2,15 @@
 
 当前 `MODKEY` 是 `Alt`。
 
-## 启动与退出
+## 启动、选择与退出
 
 | 快捷键 | 功能 |
 |---|---|
 | `Alt + Shift + Enter` | 打开 `st` 终端 |
 | `Alt + P` | 打开 `dmenu` 程序启动器 |
+| `Alt + E` | 打开 `Thunar` 文件管理器 |
 | `Alt + Shift + P` | 选择 Mihomo 策略组和节点 |
+| `Alt + Shift + W` | 预览并选择桌面壁纸 |
 | `Alt + Shift + C` | 关闭当前窗口 |
 | `Alt + Shift + Q` | 退出 dwm |
 | `Alt + B` | 显示或隐藏 Polybar |

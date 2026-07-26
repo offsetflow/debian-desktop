@@ -21,6 +21,9 @@ for command_name in \
     fcitx5 \
     pipewire \
     wireplumber \
+    feh \
+    nsxiv \
+    thunar \
     git \
     zsh \
     fzf \
@@ -67,6 +70,7 @@ check_link "$REPO_DIR/x11/xinitrc" "$HOME/.xinitrc"
 check_link "$REPO_DIR/picom/picom.conf" "$HOME/.config/picom/picom.conf"
 check_link "$REPO_DIR/polybar/config.ini" "$HOME/.config/polybar/config.ini"
 check_link "$REPO_DIR/fontconfig/fonts.conf" "$HOME/.config/fontconfig/fonts.conf"
+check_link "$REPO_DIR/x11/mimeapps.list" "$HOME/.config/mimeapps.list"
 check_link "$REPO_DIR/shell/zshrc" "$HOME/.zshrc"
 
 fdfind_path=$(command -v fdfind 2>/dev/null || true)
@@ -78,6 +82,7 @@ check_executable "$REPO_DIR/x11/start-dwm.sh"
 check_executable "$REPO_DIR/picom/launch.sh"
 check_executable "$REPO_DIR/polybar/launch.sh"
 check_executable "$REPO_DIR/wallpapers/set-wallpaper.sh"
+check_executable "$REPO_DIR/wallpapers/select-wallpaper.sh"
 check_executable "$REPO_DIR/scripts/install-omz.sh"
 check_executable "$REPO_DIR/scripts/set-default-shell.sh"
 
