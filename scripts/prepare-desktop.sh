@@ -20,7 +20,7 @@ x11_runtime=(
 
 # 桌面运行依赖：状态栏、中文输入法、现代音频栈、蓝牙与蓝牙音频、音量控制、
 # 截图、壁纸设置与预览、带回收站和图片缩略图支持的文件管理器，以及 OMZ
-# 所需的 Zsh、模糊搜索、文件搜索和 Lua。
+# 所需的 Zsh、模糊搜索、文件搜索和 Lua，以及用于 C 开发的 Neovim。
 desktop_runtime=(
     polybar
     fcitx5
@@ -42,6 +42,7 @@ desktop_runtime=(
     fzf
     fd-find
     lua5.4
+    neovim
 )
 
 # 桌面字体：终端与界面字体、CJK 与 Emoji 回退字体和 Polybar 图标字体。

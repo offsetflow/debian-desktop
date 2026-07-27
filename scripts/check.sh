@@ -30,6 +30,7 @@ for command_name in \
     fzf \
     fd \
     fdfind \
+    nvim \
     lua
 do
     if ! command -v "$command_name" >/dev/null 2>&1; then
@@ -71,6 +72,7 @@ check_link "$REPO_DIR/x11/xinitrc" "$HOME/.xinitrc"
 check_link "$REPO_DIR/picom/picom.conf" "$HOME/.config/picom/picom.conf"
 check_link "$REPO_DIR/polybar/config.ini" "$HOME/.config/polybar/config.ini"
 check_link "$REPO_DIR/fontconfig/fonts.conf" "$HOME/.config/fontconfig/fonts.conf"
+check_link "$REPO_DIR/neovim/init.lua" "$HOME/.config/nvim/init.lua"
 check_link "$REPO_DIR/x11/mimeapps.list" "$HOME/.config/mimeapps.list"
 check_link "$REPO_DIR/shell/zshrc" "$HOME/.zshrc"
 

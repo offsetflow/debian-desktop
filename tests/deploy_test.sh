@@ -25,6 +25,7 @@ assert_link "$test_home/.xinitrc" "$repo_dir/x11/xinitrc"
 assert_link "$test_home/.config/picom/picom.conf" "$repo_dir/picom/picom.conf"
 assert_link "$test_home/.config/polybar/config.ini" "$repo_dir/polybar/config.ini"
 assert_link "$test_home/.config/fontconfig/fonts.conf" "$repo_dir/fontconfig/fonts.conf"
+assert_link "$test_home/.config/nvim/init.lua" "$repo_dir/neovim/init.lua"
 assert_link "$test_home/.config/mimeapps.list" "$repo_dir/x11/mimeapps.list"
 assert_link "$test_home/.zshrc" "$repo_dir/shell/zshrc"
 

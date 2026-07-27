@@ -38,6 +38,7 @@ link_config "$REPO_DIR/x11/xinitrc" "$HOME/.xinitrc" "$REPO_DIR/x11/xinitrc.lega
 link_config "$REPO_DIR/picom/picom.conf" "$HOME/.config/picom/picom.conf"
 link_config "$REPO_DIR/polybar/config.ini" "$HOME/.config/polybar/config.ini"
 link_config "$REPO_DIR/fontconfig/fonts.conf" "$HOME/.config/fontconfig/fonts.conf"
+link_config "$REPO_DIR/neovim/init.lua" "$HOME/.config/nvim/init.lua"
 link_config "$REPO_DIR/x11/mimeapps.list" "$HOME/.config/mimeapps.list" \
     "$REPO_DIR/x11/mimeapps.list.legacy"
 link_config "$REPO_DIR/shell/zshrc" "$HOME/.zshrc"
