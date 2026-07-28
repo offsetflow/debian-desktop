@@ -53,6 +53,7 @@ for package_name in \
     zsh \
     fzf \
     fd-find \
+    ripgrep \
     neovim \
     lua5.4 \
     meson \

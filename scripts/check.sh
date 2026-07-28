@@ -30,6 +30,7 @@ for command_name in \
     fzf \
     fd \
     fdfind \
+    rg \
     nvim \
     lua
 do

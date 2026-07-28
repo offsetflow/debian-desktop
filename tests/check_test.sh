@@ -17,7 +17,7 @@ mkdir -p "$test_home/.config/picom" \
 
 for command_name in \
     dwm st dmenu picom polybar startx fcitx5 pipewire wireplumber \
-    flameshot feh nsxiv thunar zsh fzf fd nvim lua fdfind
+    flameshot feh nsxiv thunar zsh fzf fd rg nvim lua fdfind
 do
     printf '#!/bin/sh\nexit 0\n' >"$stub_dir/$command_name"
     chmod +x "$stub_dir/$command_name"

@@ -1,4 +1,7 @@
--- Lightweight Neovim configuration for C development.
+-- Lightweight Neovim configuration for C and Markdown editing.
+
+local config_file = debug.getinfo(1, "S").source:sub(2)
+local config_dir = vim.fn.fnamemodify(vim.fn.resolve(config_file), ":h")
 
 vim.g.mapleader = " "
 
@@ -24,10 +27,35 @@ vim.opt.splitbelow = true
 vim.opt.laststatus = 2
 vim.opt.showmode = false
 vim.opt.completeopt = { "menu", "menuone", "noselect" }
+vim.opt.autoread = true
+vim.opt.confirm = true
+vim.opt.undofile = true
+vim.opt.updatetime = 250
+vim.opt.list = true
+vim.opt.listchars = {
+    tab = "» ",
+    trail = "·",
+    nbsp = "␣",
+}
 
 vim.keymap.set("n", "<leader>w", "<cmd>write<cr>", { desc = "Save file" })
 vim.keymap.set("n", "<leader>q", "<cmd>quit<cr>", { desc = "Quit window" })
+vim.keymap.set("n", "<leader>m", "<cmd>make<cr>", { desc = "Run make" })
+vim.keymap.set("n", "<leader>qo", "<cmd>copen<cr>", { desc = "Open quickfix" })
+vim.keymap.set("n", "<leader>qc", "<cmd>cclose<cr>", { desc = "Close quickfix" })
+vim.keymap.set("n", "[q", "<cmd>cprevious<cr>", { desc = "Previous quickfix item" })
+vim.keymap.set("n", "]q", "<cmd>cnext<cr>", { desc = "Next quickfix item" })
+vim.keymap.set("n", "<C-h>", "<C-w>h", { desc = "Focus left window" })
+vim.keymap.set("n", "<C-j>", "<C-w>j", { desc = "Focus lower window" })
+vim.keymap.set("n", "<C-k>", "<C-w>k", { desc = "Focus upper window" })
+vim.keymap.set("n", "<C-l>", "<C-w>l", { desc = "Focus right window" })
 vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<cr>", { silent = true })
+vim.keymap.set(
+    "n",
+    "<leader>mp",
+    "<cmd>PrevimOpen<cr>",
+    { desc = "Open Markdown preview" }
+)
 
 -- Treat headers as C files in this deliberately C-only setup.
 vim.filetype.add({
@@ -36,20 +64,46 @@ vim.filetype.add({
     },
 })
 
--- Neovim ships a capable C syntax file, so no plugin or parser download is
--- needed. Syntax highlighting is cleared for every other file type.
+-- Use Neovim's built-in syntax support for every detected file type.
 vim.cmd("syntax enable")
 vim.api.nvim_create_autocmd("FileType", {
-    pattern = "*",
+    pattern = { "c", "markdown" },
     callback = function(args)
         if args.match == "c" then
-            vim.bo.syntax = "c"
             vim.bo.cindent = true
             vim.bo.omnifunc = "ccomplete#Complete"
-        else
-            vim.bo.syntax = ""
+        elseif args.match == "markdown" then
+            vim.wo.wrap = true
+            vim.wo.linebreak = true
         end
     end,
+})
+
+vim.api.nvim_create_autocmd("LspAttach", {
+    callback = function(args)
+        local map = function(lhs, rhs, desc)
+            vim.keymap.set("n", lhs, rhs, {
+                buffer = args.buf,
+                desc = desc,
+            })
+        end
+
+        vim.bo[args.buf].omnifunc = "v:lua.vim.lsp.omnifunc"
+        map("gd", vim.lsp.buf.definition, "Go to definition")
+        map("gr", vim.lsp.buf.references, "Find references")
+        map("K", vim.lsp.buf.hover, "Show documentation")
+        map("[d", vim.diagnostic.goto_prev, "Previous diagnostic")
+        map("]d", vim.diagnostic.goto_next, "Next diagnostic")
+        map("<leader>e", vim.diagnostic.open_float, "Show diagnostic")
+    end,
+})
+
+vim.diagnostic.config({
+    severity_sort = true,
+    float = { border = "rounded", source = "if_many" },
+    signs = true,
+    underline = true,
+    virtual_text = false,
 })
 
 local palette = {
@@ -98,6 +152,13 @@ local function apply_colors()
     set(0, "Title", { fg = palette.cyan, bold = true })
     set(0, "ErrorMsg", { fg = palette.red })
     set(0, "WarningMsg", { fg = palette.yellow })
+    set(0, "DiagnosticError", { fg = palette.red })
+    set(0, "DiagnosticWarn", { fg = palette.yellow })
+    set(0, "DiagnosticInfo", { fg = palette.blue })
+    set(0, "DiagnosticHint", { fg = palette.cyan })
+    set(0, "GitSignsAdd", { fg = palette.green })
+    set(0, "GitSignsChange", { fg = palette.blue })
+    set(0, "GitSignsDelete", { fg = palette.red })
 
     set(0, "Comment", { fg = palette.green, italic = true })
     set(0, "Constant", { fg = palette.orange })
@@ -121,7 +182,7 @@ end
 
 apply_colors()
 
-local function setup_statusline()
+local function setup_plugins()
     if vim.env.NVIM_SKIP_PLUGINS == "1" then
         return
     end
@@ -173,7 +234,6 @@ local function setup_statusline()
         },
     }
 
-    local config_dir = vim.fn.fnamemodify(vim.fn.resolve(vim.env.MYVIMRC), ":h")
     require("lazy").setup({
         {
             "nvim-lualine/lualine.nvim",
@@ -227,6 +287,89 @@ local function setup_statusline()
                 extensions = { "lazy" },
             },
         },
+        {
+            "previm/previm",
+            ft = { "markdown" },
+            cmd = { "PrevimOpen", "PrevimRefresh", "PrevimWipeCache" },
+            dependencies = {
+                "tyru/open-browser.vim",
+            },
+            init = function()
+                vim.g.previm_enable_realtime = 1
+                vim.g.previm_open_cmd = "xdg-open"
+            end,
+        },
+        {
+            "ibhagwan/fzf-lua",
+            cmd = "FzfLua",
+            keys = {
+                {
+                    "<leader>ff",
+                    function()
+                        require("fzf-lua").files()
+                    end,
+                    desc = "Find files",
+                },
+                {
+                    "<leader>fg",
+                    function()
+                        require("fzf-lua").live_grep()
+                    end,
+                    desc = "Search project text",
+                },
+                {
+                    "<leader>fb",
+                    function()
+                        require("fzf-lua").buffers()
+                    end,
+                    desc = "Find buffers",
+                },
+            },
+            opts = {
+                file_icons = false,
+                winopts = {
+                    border = "rounded",
+                    preview = { border = "rounded" },
+                },
+            },
+        },
+        {
+            "lewis6991/gitsigns.nvim",
+            event = { "BufReadPre", "BufNewFile" },
+            opts = {
+                current_line_blame = false,
+                on_attach = function(bufnr)
+                    local gitsigns = require("gitsigns")
+                    local map = function(lhs, rhs, desc)
+                        vim.keymap.set("n", lhs, rhs, {
+                            buffer = bufnr,
+                            desc = desc,
+                        })
+                    end
+
+                    map("]h", function()
+                        gitsigns.nav_hunk("next")
+                    end, "Next Git hunk")
+                    map("[h", function()
+                        gitsigns.nav_hunk("prev")
+                    end, "Previous Git hunk")
+                    map("<leader>gp", gitsigns.preview_hunk, "Preview Git hunk")
+                    map("<leader>gb", function()
+                        gitsigns.blame_line({ full = true })
+                    end, "Show Git blame")
+                end,
+            },
+        },
+        {
+            "neovim/nvim-lspconfig",
+            version = "v1.8.0",
+            ft = { "c", "cpp" },
+            config = function()
+                if vim.fn.executable("clangd") == 1 then
+                    require("lspconfig").clangd.setup({})
+                end
+            end,
+        },
     }, {
         lockfile = config_dir .. "/lazy-lock.json",
         checker = { enabled = false },
@@ -236,4 +379,4 @@ local function setup_statusline()
     })
 end
 
-setup_statusline()
+setup_plugins()

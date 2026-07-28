@@ -19,3 +19,6 @@
 
 # 本地功能开发 worktree
 /.worktrees/
+
+# Neovim 在当前目录生成的本地日志
+/.nvimlog
