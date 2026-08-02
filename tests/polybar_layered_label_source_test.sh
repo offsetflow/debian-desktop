@@ -26,6 +26,16 @@ grep -Fq 'label-active-background = ${colors.active}' "$polybar_config" \
     || fail "active label background must be drawn directly by Polybar"
 grep -Eq '^[[:space:]]*label-active-padding[[:space:]]*=[[:space:]]*1[[:space:]]*$' "$polybar_config" \
     || fail "active label must keep compact horizontal padding"
+grep -Eq '^[[:space:]]*urgent-background[[:space:]]*=[[:space:]]*#35e35d6a[[:space:]]*$' "$polybar_config" \
+    || fail "urgent label must use a translucent red overlay"
+grep -Eq '^[[:space:]]*label-urgent[[:space:]]*=[[:space:]]*●[[:space:]]+%name%[[:space:]]*$' "$polybar_config" \
+    || fail "urgent label must include a compact notification marker"
+grep -Fq 'label-urgent-background = ${colors.urgent-background}' "$polybar_config" \
+    || fail "urgent label must use the translucent overlay"
+grep -Fq 'label-urgent-underline = ${colors.urgent}' "$polybar_config" \
+    || fail "urgent label must retain an opaque red underline"
+grep -Eq '^[[:space:]]*label-urgent-padding[[:space:]]*=[[:space:]]*1[[:space:]]*$' "$polybar_config" \
+    || fail "urgent label must keep compact horizontal padding"
 
 if grep -Eq '||Polybar Rounded Caps' "$polybar_config"; then
     fail "rectangular labels must not retain rounded-cap markup or fonts"

@@ -883,7 +883,11 @@ ttywrite(const char *s, size_t n, int may_echo)
 	const char *next;
 	Arg arg = (Arg) { .i = term.scr };
 
-	kscrolldown(&arg);
+	/* Keep scrollback in place for terminal-generated protocol replies such
+	 * as focus and mouse reports.  Only explicit user input should return
+	 * the viewport to the live screen. */
+	if (may_echo)
+		kscrolldown(&arg);
 
 	if (may_echo && IS_SET(MODE_ECHO))
 		twrite(s, n, 1);
