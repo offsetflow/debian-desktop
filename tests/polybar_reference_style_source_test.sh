@@ -4,6 +4,7 @@ set -eu
 repo_root="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 config="$repo_root/polybar/config.ini"
 launch="$repo_root/polybar/launch.sh"
+audio="$repo_root/polybar/audio.sh"
 prepare="$repo_root/scripts/prepare-desktop.sh"
 
 fail() {
@@ -35,7 +36,7 @@ grep -Fq 'FontAwesome' "$config" \
 if grep -Fq '${env:HOME}' "$config"; then
     fail "module shell commands must not contain unexpanded Polybar HOME expressions"
 fi
-grep -Fq 'label-volume =   %percentage%%' "$config" \
+grep -Fq '  %s%%' "$audio" \
     || fail "volume should use an icon"
 grep -Fq 'label-connected =   %signal%%' "$config" \
     || fail "Wi-Fi should use an icon"
