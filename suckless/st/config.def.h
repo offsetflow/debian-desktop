@@ -7,7 +7,7 @@
  */
 static char *font = "JetBrains Mono:pixelsize=16";
 static int borderpx = 0;
-static float alpha = 0xa0 / 255.0f;
+static float alpha = 0xd9 / 255.0f;
 
 /*
  * What program is execed by st depends of these precedence rules:
@@ -114,8 +114,8 @@ static const char *colorname[] = {
 	[15] = "#eeeeee", /* white   */
 
 	/* special colors */
-	[256] = "#1e1f21", /* background */
-	[257] = "#cccccc", /* foreground */
+	[256] = "#26313b", /* background */
+	[257] = "#e6edf3", /* foreground */
 };
 
 
