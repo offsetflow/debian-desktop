@@ -375,7 +375,20 @@ local function setup_plugins()
             ft = { "c", "cpp" },
             config = function()
                 if vim.fn.executable("clangd") == 1 then
-                    require("lspconfig").clangd.setup({})
+                    local lspconfig = require("lspconfig")
+
+                    lspconfig.clangd.setup({
+                        cmd = {
+                            "clangd",
+                            "--background-index",
+                            "--query-driver=/usr/bin/riscv64-linux-gnu-*",
+                        },
+                        root_dir = lspconfig.util.root_pattern(
+                            "compile_commands.json",
+                            "compile_flags.txt",
+                            ".git"
+                        ),
+                    })
                 end
             end,
         },
