@@ -15,10 +15,10 @@ fail() {
 grep -Eq '^[[:space:]]*height[[:space:]]*=[[:space:]]*36px[[:space:]]*$' "$config"     || fail "bar should match the approved 36px visual height"
 grep -Eq '^[[:space:]]*modules-left[[:space:]]*=[[:space:]]*system-mark xworkspaces[[:space:]]*$' "$config"     || fail "left modules should contain only the system mark and workspaces"
 grep -Eq '^[[:space:]]*modules-center[[:space:]]*=[[:space:]]*date[[:space:]]*$' "$config"     || fail "date should remain centered"
-grep -Fq 'modules-right = ${env:POLYBAR_RIGHT_MODULES:input-method brightness pulseaudio wlan battery power}' "$config"     || fail "right modules should be injected per monitor"
+grep -Fq 'modules-right = ${env:POLYBAR_RIGHT_MODULES:input-method brightness pulseaudio wlan battery notifications power}' "$config"     || fail "right modules should be injected per monitor"
 ! grep -Eq '^[[:space:]]*modules-left.*xwindow' "$config"     || fail "window title module should not duplicate dynamic workspace names"
 
-for module in system-mark xworkspaces date tray input-method brightness pulseaudio wlan battery power; do
+for module in system-mark xworkspaces date tray input-method brightness pulseaudio wlan battery notifications power; do
     grep -Fq "[module/$module]" "$config" || fail "missing module: $module"
 done
 

@@ -64,6 +64,11 @@ fi
 # launch.sh 会先结束旧进程，避免重复启动多个 Picom 实例。
 "$HOME/workspace/personal/debian-desktop/picom/launch.sh"
 
+# 启动轻量通知守护进程；自定义通知中心从 Dunst 的内存历史读取通知。
+if command -v dunst >/dev/null 2>&1; then
+    "$HOME/workspace/personal/debian-desktop/dunst/launch.sh"
+fi
+
 # 用户自行提供 Xresources 时才载入；仓库不维护空置的 Xresources。
 if [ -r "$HOME/.Xresources" ] && command -v xrdb >/dev/null 2>&1; then
     xrdb -merge "$HOME/.Xresources"

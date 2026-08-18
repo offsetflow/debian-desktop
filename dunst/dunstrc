@@ -1,0 +1,84 @@
+[global]
+    monitor = 0
+    follow = keyboard
+
+    width = 320
+    height = (0, 130)
+    origin = top-right
+    offset = (14, 48)
+    scale = 1
+    notification_limit = 4
+
+    progress_bar = true
+    progress_bar_height = 5
+    progress_bar_frame_width = 0
+    progress_bar_min_width = 100
+    progress_bar_max_width = 260
+    progress_bar_corner_radius = 2
+
+    indicate_hidden = true
+    transparency = 0
+    separator_height = 0
+    padding = 10
+    horizontal_padding = 13
+    text_icon_padding = 9
+    frame_width = 1
+    frame_color = "#FFFFFF30"
+    gap_size = 7
+    separator_color = frame
+    sort = update
+
+    font = Noto Sans CJK SC 9
+    line_height = 1
+    markup = full
+    format = "<b>%s</b>\n%b"
+    alignment = left
+    vertical_alignment = center
+    show_age_threshold = 60
+    ellipsize = end
+    ignore_newline = false
+    stack_duplicates = true
+    hide_duplicate_count = false
+    show_indicators = false
+
+    enable_recursive_icon_lookup = true
+    icon_theme = hicolor
+    icon_position = left
+    min_icon_size = 26
+    max_icon_size = 32
+    icon_corner_radius = 8
+
+    sticky_history = false
+    history_length = 50
+
+    dmenu = /usr/bin/dmenu -p dunst:
+    browser = /usr/bin/xdg-open
+    title = Dunst
+    class = Dunst
+    corner_radius = 14
+    corners = all
+
+    mouse_left_click = do_action, close_current
+    mouse_middle_click = context
+    mouse_right_click = close_current
+
+[urgency_low]
+    background = "#11141ED9"
+    foreground = "#AEB4C4"
+    frame_color = "#FFFFFF24"
+    highlight = "#65DDB2"
+    timeout = 4
+
+[urgency_normal]
+    background = "#11141ED9"
+    foreground = "#F4F5F8"
+    frame_color = "#FFFFFF30"
+    highlight = "#8F63FF"
+    timeout = 6
+
+[urgency_critical]
+    background = "#21131DD9"
+    foreground = "#FFFFFF"
+    frame_color = "#FF6EA8"
+    highlight = "#FF6EA8"
+    timeout = 0

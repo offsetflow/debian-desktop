@@ -19,11 +19,16 @@ x11_runtime=(
 )
 
 # 桌面运行依赖：状态栏、中文输入法、现代音频栈、蓝牙与蓝牙音频、音量控制、
-# 截图、壁纸设置与预览、带回收站和图片缩略图支持的文件管理器，以及 OMZ
-# 所需的 Zsh、模糊搜索、文件与文本搜索和 Lua，以及支持 Markdown
-# 浏览器预览的 xdg-open 和通用 Neovim 编辑环境。
+# 截图、壁纸设置与预览、GTK 面板日历弹窗、通知守护进程与通知中心、带回收站
+# 和图片缩略图支持的文件管理器，以及 OMZ 所需的 Zsh、模糊搜索、文件与文本
+# 搜索和 Lua，以及支持 Markdown 浏览器预览的 xdg-open 和通用 Neovim 编辑环境。
 desktop_runtime=(
     polybar
+    dunst
+    gsimplecal
+    python3-gi
+    python3-gi-cairo
+    gir1.2-gtk-3.0
     fcitx5
     fcitx5-chinese-addons
     pipewire

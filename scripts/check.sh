@@ -10,6 +10,7 @@ TARGET_USER=${TARGET_USER:-${SUDO_USER:-$USER}}
 failed=0
 picom_bin="$HOME/.local/bin/picom"
 mise_bin="$HOME/.local/bin/mise"
+python_bin=${PYTHON_BIN:-/usr/bin/python3}
 
 for command_name in \
     dwm \
@@ -17,6 +18,9 @@ for command_name in \
     dmenu \
     picom \
     polybar \
+    dunst \
+    dunstctl \
+    gsimplecal \
     startx \
     fcitx5 \
     pipewire \
@@ -39,6 +43,14 @@ do
         failed=1
     fi
 done
+
+if [ ! -x "$python_bin" ] \
+    || ! "$python_bin" -c 'import cairo, gi; gi.require_version("Gtk", "3.0"); gi.require_version("PangoCairo", "1.0"); from gi.repository import Gtk, PangoCairo' \
+        >/dev/null 2>&1
+then
+    printf 'check: missing Python GTK3 bindings for desktop popups\n' >&2
+    failed=1
+fi
 
 if [ ! -x "$picom_bin" ]; then
     printf 'check: missing executable: %s\n' "$picom_bin" >&2
@@ -72,6 +84,8 @@ check_executable() {
 check_link "$REPO_DIR/x11/xinitrc" "$HOME/.xinitrc"
 check_link "$REPO_DIR/picom/picom.conf" "$HOME/.config/picom/picom.conf"
 check_link "$REPO_DIR/polybar/config.ini" "$HOME/.config/polybar/config.ini"
+check_link "$REPO_DIR/dunst/dunstrc" "$HOME/.config/dunst/dunstrc"
+check_link "$REPO_DIR/gsimplecal/config" "$HOME/.config/gsimplecal/config"
 check_link "$REPO_DIR/fontconfig/fonts.conf" "$HOME/.config/fontconfig/fonts.conf"
 check_link "$REPO_DIR/neovim/init.lua" "$HOME/.config/nvim/init.lua"
 check_link "$REPO_DIR/x11/mimeapps.list" "$HOME/.config/mimeapps.list"
@@ -85,6 +99,11 @@ fi
 check_executable "$REPO_DIR/x11/start-dwm.sh"
 check_executable "$REPO_DIR/picom/launch.sh"
 check_executable "$REPO_DIR/polybar/launch.sh"
+check_executable "$REPO_DIR/polybar/calendar-popup.sh"
+check_executable "$REPO_DIR/polybar/calendar-popup.py"
+check_executable "$REPO_DIR/polybar/notification-center.sh"
+check_executable "$REPO_DIR/polybar/notification-center.py"
+check_executable "$REPO_DIR/dunst/launch.sh"
 check_executable "$REPO_DIR/wallpapers/set-wallpaper.sh"
 check_executable "$REPO_DIR/wallpapers/select-wallpaper.sh"
 check_executable "$REPO_DIR/scripts/install-omz.sh"

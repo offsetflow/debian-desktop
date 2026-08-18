@@ -38,6 +38,11 @@ for package_name in \
     dbus-x11 \
     libx11-dev \
     polybar \
+    dunst \
+    gsimplecal \
+    python3-gi \
+    python3-gi-cairo \
+    gir1.2-gtk-3.0 \
     fcitx5-chinese-addons \
     pipewire-pulse \
     fonts-font-awesome \

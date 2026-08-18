@@ -34,7 +34,7 @@ printf '%s\n' "$monitors" | while IFS= read -r monitor_line; do
     monitor="${monitor_line%%:*}"
     [ -n "$monitor" ] || continue
 
-    right_modules="input-method brightness pulseaudio wlan battery power"
+    right_modules="input-method brightness pulseaudio wlan battery notifications power"
     if [ "$monitor" = "$primary_monitor" ]; then
         right_modules="tray $right_modules"
     fi

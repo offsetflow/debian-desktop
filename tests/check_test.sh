@@ -9,6 +9,8 @@ test_home="$tmp_dir/home"
 stub_dir="$tmp_dir/bin"
 mkdir -p "$test_home/.config/picom" \
     "$test_home/.config/polybar" \
+    "$test_home/.config/dunst" \
+    "$test_home/.config/gsimplecal" \
     "$test_home/.config/fontconfig" \
     "$test_home/.config/nvim" \
     "$test_home/.local/bin" \
@@ -16,7 +18,7 @@ mkdir -p "$test_home/.config/picom" \
     "$stub_dir"
 
 for command_name in \
-    dwm st dmenu picom polybar startx fcitx5 pipewire wireplumber \
+    dwm st dmenu picom polybar dunst dunstctl gsimplecal python3 startx fcitx5 pipewire wireplumber \
     flameshot feh nsxiv thunar zsh fzf fd rg nvim lua fdfind
 do
     printf '#!/bin/sh\nexit 0\n' >"$stub_dir/$command_name"
@@ -38,6 +40,8 @@ chmod +x "$stub_dir/getent"
 ln -s "$repo_dir/x11/xinitrc" "$test_home/.xinitrc"
 ln -s "$repo_dir/picom/picom.conf" "$test_home/.config/picom/picom.conf"
 ln -s "$repo_dir/polybar/config.ini" "$test_home/.config/polybar/config.ini"
+ln -s "$repo_dir/dunst/dunstrc" "$test_home/.config/dunst/dunstrc"
+ln -s "$repo_dir/gsimplecal/config" "$test_home/.config/gsimplecal/config"
 ln -s "$repo_dir/fontconfig/fonts.conf" "$test_home/.config/fontconfig/fonts.conf"
 ln -s "$repo_dir/neovim/init.lua" "$test_home/.config/nvim/init.lua"
 ln -s "$repo_dir/x11/mimeapps.list" "$test_home/.config/mimeapps.list"
@@ -63,6 +67,7 @@ OMZ_REPOSITORY="$tmp_dir/upstream.git" \
 OMZ_VERSION_FILE="$tmp_dir/omz-version" \
 GETENT_BIN="$stub_dir/getent" \
 ZSH_PATH="$stub_dir/zsh" \
+PYTHON_BIN="$stub_dir/python3" \
     "$repo_dir/scripts/check.sh"
 
 rm "$test_home/.local/bin/picom"
@@ -80,6 +85,7 @@ if HOME="$test_home" \
     OMZ_VERSION_FILE="$tmp_dir/omz-version" \
     GETENT_BIN="$stub_dir/getent" \
     ZSH_PATH="$stub_dir/zsh" \
+    PYTHON_BIN="$stub_dir/python3" \
     "$repo_dir/scripts/check.sh" >"$tmp_dir/check.out" 2>&1
 then
     echo "expected missing command and incorrect link to fail" >&2
