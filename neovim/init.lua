@@ -361,6 +361,15 @@ local function setup_plugins()
             },
         },
         {
+            "otavioschwanck/arrow.nvim",
+            opts = {
+                show_icons = false,
+                leader_key = ";",
+                buffer_leader_key = "m",
+                window = { border = "rounded" },
+            },
+        },
+        {
             "neovim/nvim-lspconfig",
             version = "v1.8.0",
             ft = { "c", "cpp" },
