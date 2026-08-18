@@ -27,6 +27,9 @@ for command_name in \
     wireplumber \
     flameshot \
     feh \
+    ffmpeg \
+    i3lock-color \
+    xss-lock \
     nsxiv \
     thunar \
     git \
@@ -90,6 +93,7 @@ check_link "$REPO_DIR/fontconfig/fonts.conf" "$HOME/.config/fontconfig/fonts.con
 check_link "$REPO_DIR/neovim/init.lua" "$HOME/.config/nvim/init.lua"
 check_link "$REPO_DIR/x11/mimeapps.list" "$HOME/.config/mimeapps.list"
 check_link "$REPO_DIR/shell/zshrc" "$HOME/.zshrc"
+check_link "$REPO_DIR/lockscreen/lock.sh" "$HOME/.local/bin/lock-screen"
 
 fdfind_path=$(command -v fdfind 2>/dev/null || true)
 if [ -n "$fdfind_path" ]; then
@@ -106,6 +110,9 @@ check_executable "$REPO_DIR/polybar/notification-center.py"
 check_executable "$REPO_DIR/dunst/launch.sh"
 check_executable "$REPO_DIR/wallpapers/set-wallpaper.sh"
 check_executable "$REPO_DIR/wallpapers/select-wallpaper.sh"
+check_executable "$REPO_DIR/lockscreen/lock.sh"
+check_executable "$REPO_DIR/lockscreen/render.py"
+check_executable "$REPO_DIR/scripts/install-i3lock-color.sh"
 check_executable "$REPO_DIR/scripts/install-omz.sh"
 check_executable "$REPO_DIR/scripts/set-default-shell.sh"
 

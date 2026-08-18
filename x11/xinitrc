@@ -69,6 +69,12 @@ if command -v dunst >/dev/null 2>&1; then
     "$HOME/workspace/personal/debian-desktop/dunst/launch.sh"
 fi
 
+# 让系统挂起和 X11 屏保事件进入同一套 i3lock 界面。xss-lock 会等待锁屏
+# 进程真正取得输入控制后再允许挂起，避免唤醒时短暂露出桌面。
+if command -v xss-lock >/dev/null 2>&1 && [ -x "$HOME/.local/bin/lock-screen" ]; then
+    xss-lock --transfer-sleep-lock -- "$HOME/.local/bin/lock-screen" >/dev/null 2>&1 &
+fi
+
 # 用户自行提供 Xresources 时才载入；仓库不维护空置的 Xresources。
 if [ -r "$HOME/.Xresources" ] && command -v xrdb >/dev/null 2>&1; then
     xrdb -merge "$HOME/.Xresources"

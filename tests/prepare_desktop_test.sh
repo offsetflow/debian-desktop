@@ -46,8 +46,12 @@ for package_name in \
     fcitx5-chinese-addons \
     pipewire-pulse \
     fonts-font-awesome \
+    fonts-comfortaa \
     fonts-noto-color-emoji \
     feh \
+    ffmpeg \
+    i3lock \
+    xss-lock \
     nsxiv \
     thunar \
     gvfs \
@@ -62,6 +66,17 @@ for package_name in \
     neovim \
     lua5.4 \
     meson \
+    autoconf \
+    automake \
+    libpam0g-dev \
+    libcairo2-dev \
+    libxcb-xkb-dev \
+    libxcb-xinerama0-dev \
+    libxcb-xrm-dev \
+    libxkbcommon-dev \
+    libxkbcommon-x11-dev \
+    libjpeg-dev \
+    libgif-dev \
     libdbus-1-dev \
     libepoxy-dev
 do

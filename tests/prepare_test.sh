@@ -28,6 +28,7 @@ EOF
 
 for stage_name in \
     prepare-desktop.sh \
+    install-i3lock-color.sh \
     prepare-mise.sh \
     install-suckless.sh \
     install-picom.sh \
@@ -46,6 +47,7 @@ done
 
 cat >"$tmp_dir/expected.log" <<'EOF'
 prepare-desktop.sh
+install-i3lock-color.sh
 prepare-mise.sh
 install-suckless.sh
 install-picom.sh
@@ -66,6 +68,7 @@ fi
 
 cat >"$tmp_dir/expected-failure.log" <<'EOF'
 prepare-desktop.sh
+install-i3lock-color.sh
 prepare-mise.sh
 install-suckless.sh
 install-picom.sh

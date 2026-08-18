@@ -19,7 +19,7 @@ mkdir -p "$test_home/.config/picom" \
 
 for command_name in \
     dwm st dmenu picom polybar dunst dunstctl gsimplecal python3 startx fcitx5 pipewire wireplumber \
-    flameshot feh nsxiv thunar zsh fzf fd rg nvim lua fdfind
+    flameshot feh ffmpeg i3lock-color xss-lock nsxiv thunar zsh fzf fd rg nvim lua fdfind
 do
     printf '#!/bin/sh\nexit 0\n' >"$stub_dir/$command_name"
     chmod +x "$stub_dir/$command_name"
@@ -46,6 +46,7 @@ ln -s "$repo_dir/fontconfig/fonts.conf" "$test_home/.config/fontconfig/fonts.con
 ln -s "$repo_dir/neovim/init.lua" "$test_home/.config/nvim/init.lua"
 ln -s "$repo_dir/x11/mimeapps.list" "$test_home/.config/mimeapps.list"
 ln -s "$repo_dir/shell/zshrc" "$test_home/.zshrc"
+ln -s "$repo_dir/lockscreen/lock.sh" "$test_home/.local/bin/lock-screen"
 ln -s "$stub_dir/fdfind" "$test_home/.local/bin/fd"
 
 omz_dir="$test_home/.local/share/omz"

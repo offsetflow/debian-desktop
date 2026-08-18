@@ -91,6 +91,7 @@ static const char *filecmd[]  = { "thunar", NULL };
 static const char *mihomoselectcmd[] = { "/bin/sh", "-c", "$HOME/workspace/personal/debian-desktop/mihomo/select.sh --monitor \"$1\"", "mihomo-select", dmenumon, NULL };
 static const char *wallpaperselectcmd[] = { "/bin/sh", "-c", "$HOME/workspace/personal/debian-desktop/wallpapers/select-wallpaper.sh", NULL };
 static const char *screenshotcmd[] = { "flameshot", "gui", "--clipboard", NULL };
+static const char *lockcmd[] = { "/bin/sh", "-c", "$HOME/.local/bin/lock-screen", NULL };
 
 static const Key keys[] = {
 	/* modifier                     key        function        argument */
@@ -99,6 +100,7 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_e,      spawn,          {.v = filecmd } },
 	{ MODKEY|ShiftMask,             XK_p,      spawn,          {.v = mihomoselectcmd } },
 	{ MODKEY|ShiftMask,             XK_w,      spawn,          {.v = wallpaperselectcmd } },
+	{ MODKEY|ShiftMask,             XK_l,      spawn,          {.v = lockcmd } },
 	{ MODKEY,                       XK_a,      previewallwin,  {0} },
 	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },

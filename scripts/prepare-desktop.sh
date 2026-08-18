@@ -19,9 +19,10 @@ x11_runtime=(
 )
 
 # 桌面运行依赖：状态栏、中文输入法、现代音频栈、蓝牙与蓝牙音频、音量控制、
-# 截图、壁纸设置与预览、GTK 面板日历弹窗、通知守护进程与通知中心、带回收站
-# 和图片缩略图支持的文件管理器，以及 OMZ 所需的 Zsh、模糊搜索、文件与文本
-# 搜索和 Lua，以及支持 Markdown 浏览器预览的 xdg-open 和通用 Neovim 编辑环境。
+# 截图、壁纸设置与预览、带模糊背景渲染和挂起联动的 i3lock 锁屏、GTK
+# 面板日历弹窗、通知守护进程与通知中心、带回收站和图片缩略图支持的文件
+# 管理器，以及 OMZ 所需的 Zsh、模糊搜索、文件与文本搜索和 Lua，以及支持
+# Markdown 浏览器预览的 xdg-open 和通用 Neovim 编辑环境。
 desktop_runtime=(
     polybar
     dunst
@@ -40,6 +41,11 @@ desktop_runtime=(
     pamixer
     flameshot
     feh
+    ffmpeg
+    # 保留 Debian i3lock 包提供的 /etc/pam.d/i3lock；实际界面由用户级
+    # i3lock-color 二进制负责。
+    i3lock
+    xss-lock
     nsxiv
     thunar
     gvfs
@@ -55,6 +61,7 @@ desktop_runtime=(
 
 # 桌面字体：终端与界面字体、CJK 与 Emoji 回退字体和 Polybar 图标字体。
 fonts=(
+    fonts-comfortaa
     fonts-jetbrains-mono
     fonts-noto-cjk
     fonts-noto-color-emoji
@@ -63,6 +70,8 @@ fonts=(
 
 # 通用编译工具：用于构建 suckless 项目和仓库内 Picom。
 build_tools=(
+    autoconf
+    automake
     build-essential
     git
     curl
@@ -70,6 +79,20 @@ build_tools=(
     pkg-config
     meson
     ninja-build
+)
+
+# i3lock-color 源码编译依赖；上游不在 Debian 官方仓库中，由固定版本的
+# scripts/install-i3lock-color.sh 编译并安装为 ~/.local/bin/i3lock-color。
+i3lock_color_headers=(
+    libpam0g-dev
+    libcairo2-dev
+    libxcb-xkb-dev
+    libxcb-xinerama0-dev
+    libxcb-xrm-dev
+    libxkbcommon-dev
+    libxkbcommon-x11-dev
+    libjpeg-dev
+    libgif-dev
 )
 
 # dwm、st、dmenu 的 X11 与字体开发头文件。
@@ -118,4 +141,5 @@ sudo apt-get install --no-install-recommends -y \
     "${fonts[@]}" \
     "${build_tools[@]}" \
     "${suckless_headers[@]}" \
-    "${picom_headers[@]}"
+    "${picom_headers[@]}" \
+    "${i3lock_color_headers[@]}"

@@ -30,6 +30,7 @@ assert_link "$test_home/.config/fontconfig/fonts.conf" "$repo_dir/fontconfig/fon
 assert_link "$test_home/.config/nvim/init.lua" "$repo_dir/neovim/init.lua"
 assert_link "$test_home/.config/mimeapps.list" "$repo_dir/x11/mimeapps.list"
 assert_link "$test_home/.zshrc" "$repo_dir/shell/zshrc"
+assert_link "$test_home/.local/bin/lock-screen" "$repo_dir/lockscreen/lock.sh"
 
 # A second run must leave already-correct links untouched.
 HOME="$test_home" "$repo_dir/scripts/deploy.sh"
