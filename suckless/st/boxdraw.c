@@ -30,7 +30,16 @@ int
 isboxdraw(Rune u)
 {
 	Rune block = u & ~0xff;
-	return (boxdraw && block == 0x2500 && boxdata[(uint8_t)u]) ||
+	int isroundedborder = u == 0x2500 || u == 0x2502 ||
+	                      (u >= 0x256d && u <= 0x2570);
+
+	/*
+	 * Let the font render light rounded borders as one consistent set.
+	 * Mixing font-rendered corners with boxdraw-rendered straight lines
+	 * offsets their strokes by a few pixels.
+	 */
+	return (boxdraw && block == 0x2500 && !isroundedborder &&
+	        boxdata[(uint8_t)u]) ||
 	       (boxdraw_braille && block == 0x2800);
 }
 
