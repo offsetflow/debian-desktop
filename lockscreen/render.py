@@ -17,6 +17,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--background", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--logo", type=Path)
     parser.add_argument("--monitors", default="1920x1080+0+0")
     return parser.parse_args()
 
@@ -82,6 +83,7 @@ def paint_cover(
 def draw_monitor(
     context: cairo.Context,
     background: cairo.ImageSurface,
+    logo: cairo.ImageSurface | None,
     monitor: tuple[int, int, int, int],
 ) -> None:
     width, height, x, y = monitor
@@ -107,15 +109,40 @@ def draw_monitor(
     context.set_source(vignette)
     context.fill()
 
+    if logo is not None:
+        # Match i3lock-color's indicator center and leave enough space for the
+        # keypress arc around the Debian swirl.
+        logo_size = min(width, height) * 0.09
+        logo_scale = min(
+            logo_size / logo.get_width(),
+            logo_size / logo.get_height(),
+        )
+        context.save()
+        context.translate(
+            center_x - logo.get_width() * logo_scale / 2,
+            y + height * 0.50 - logo.get_height() * logo_scale / 2,
+        )
+        context.scale(logo_scale, logo_scale)
+        context.set_source_surface(logo, 0, 0)
+        context.get_source().set_filter(cairo.FILTER_BEST)
+        context.paint_with_alpha(0.95)
+        context.restore()
+
+
 def main() -> None:
     args = parse_args()
     monitors, canvas_width, canvas_height = parse_monitors(args.monitors)
 
     background = cairo.ImageSurface.create_from_png(str(args.background))
+    logo = (
+        cairo.ImageSurface.create_from_png(str(args.logo))
+        if args.logo is not None and args.logo.is_file()
+        else None
+    )
     output = cairo.ImageSurface(cairo.FORMAT_ARGB32, canvas_width, canvas_height)
     context = cairo.Context(output)
     for monitor in monitors:
-        draw_monitor(context, background, monitor)
+        draw_monitor(context, background, logo, monitor)
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     output.write_to_png(str(args.output))

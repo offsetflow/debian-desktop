@@ -10,6 +10,7 @@ DEFAULT_WALLPAPER="$REPO_DIR/wallpapers/wallhaven-o5zmwm_1920x1080.png"
 FFMPEG_BIN=${FFMPEG_BIN:-ffmpeg}
 I3LOCK_BIN=${I3LOCK_BIN:-i3lock-color}
 PYTHON_BIN=${PYTHON_BIN:-python3}
+DEBIAN_LOGO=${DEBIAN_LOGO:-/usr/share/pixmaps/debian-logo.png}
 preview_output=
 
 if [ "${1:-}" = "--preview" ]; then
@@ -67,8 +68,14 @@ if [ -z "$primary_height" ]; then
 fi
 time_size=$((primary_height * 105 / 1000))
 date_size=$((primary_height * 27 / 1000))
+status_size=$((primary_height * 20 / 1000))
+indicator_radius=$((primary_height * 68 / 1000))
+indicator_width=$((primary_height * 7 / 1000))
 [ "$time_size" -ge 54 ] || time_size=54
 [ "$date_size" -ge 17 ] || date_size=17
+[ "$status_size" -ge 16 ] || status_size=16
+[ "$indicator_radius" -ge 56 ] || indicator_radius=56
+[ "$indicator_width" -ge 5 ] || indicator_width=5
 
 runtime_dir=${XDG_RUNTIME_DIR:-/tmp}
 work_dir=$(mktemp -d "$runtime_dir/debian-desktop-lock.XXXXXX")
@@ -89,6 +96,7 @@ trap cleanup EXIT HUP INT TERM
 "$PYTHON_BIN" "$SCRIPT_DIR/render.py" \
     --background "$blurred" \
     --output "$lock_image" \
+    --logo "$DEBIAN_LOGO" \
     --monitors "$monitors"
 
 if [ -n "$preview_output" ]; then
@@ -104,8 +112,37 @@ LC_TIME=C "$I3LOCK_BIN" \
     --ignore-empty-password \
     --image="$lock_image" \
     --force-clock \
-    --no-unlock-indicator \
+    --indicator \
+    --show-failed-attempts \
     --refresh-rate=1 \
+    --ind-pos="x+w/2:y+h*0.50" \
+    --radius="$indicator_radius" \
+    --ring-width="$indicator_width" \
+    --inside-color="100A2438" \
+    --ring-color="A7A3FF99" \
+    --line-color="00000000" \
+    --separator-color="00000000" \
+    --keyhl-color="FFF0D6FF" \
+    --bshl-color="FF8C94FF" \
+    --insidever-color="100A2466" \
+    --ringver-color="A7A3FFFF" \
+    --insidewrong-color="100A2466" \
+    --ringwrong-color="FF5F72FF" \
+    --verif-color="FFF0D6FF" \
+    --wrong-color="FF8C94FF" \
+    --verif-text="正在验证" \
+    --wrong-text="密码错误，请重试" \
+    --noinput-text="尚未输入" \
+    --greeter-text="请输入密码解锁" \
+    --greeter-pos="x+w/2:y+h*0.635" \
+    --verif-font="Noto Sans CJK SC:style=Regular" \
+    --wrong-font="Noto Sans CJK SC:style=Regular" \
+    --greeter-font="Noto Sans CJK SC:style=Regular" \
+    --verif-size="$status_size" \
+    --wrong-size="$status_size" \
+    --greeter-size="$status_size" \
+    --greeter-color="D8D4FFFF" \
+    --modif-color="FF8C94FF" \
     --time-str="%I:%M %p" \
     --date-str="%Y | %A" \
     --time-pos="x+w/2:y+h*0.205" \
@@ -117,5 +154,4 @@ LC_TIME=C "$I3LOCK_BIN" \
     --time-color="FFF0D6FF" \
     --date-color="A7A3FFFF" \
     --timeoutline-color="FFF0D6FF" \
-    --timeoutline-width=1.6 \
-    --no-modkey-text
+    --timeoutline-width=1.6

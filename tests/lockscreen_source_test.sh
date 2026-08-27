@@ -19,15 +19,28 @@ grep -Eq '^[0-9a-f]{40}$' "$version_file"
 grep -Fq 'XK_l,      spawn,          {.v = lockcmd }' "$dwm_config"
 grep -Fq 'xss-lock --transfer-sleep-lock -- "$HOME/.local/bin/lock-screen"' "$xinitrc"
 grep -Fq 'I3LOCK_BIN=${I3LOCK_BIN:-i3lock-color}' "$lock_script"
+grep -Fq 'DEBIAN_LOGO=${DEBIAN_LOGO:-/usr/share/pixmaps/debian-logo.png}' "$lock_script"
+grep -Fq -- '--logo "$DEBIAN_LOGO"' "$lock_script"
 grep -Fq -- '--force-clock' "$lock_script"
 grep -Fq -- '--refresh-rate=1' "$lock_script"
 grep -Fq -- '--time-str="%I:%M %p"' "$lock_script"
 grep -Fq -- '--date-str="%Y | %A"' "$lock_script"
-grep -Fq -- '--no-unlock-indicator' "$lock_script"
 grep -Fq -- '--time-font="Comfortaa:style=Bold"' "$lock_script"
 grep -Fq -- '--date-font="Comfortaa:style=Bold"' "$lock_script"
-if grep -Eq -- '--(indicator|avatar|username)|LOCKSCREEN_(AVATAR|DISPLAY_NAME)' "$lock_script"; then
-    echo "avatar, username or indicator configuration remains in the lock script" >&2
+grep -Fq -- '--indicator' "$lock_script"
+grep -Fq -- '--keyhl-color="FFF0D6FF"' "$lock_script"
+grep -Fq -- '--bshl-color="FF8C94FF"' "$lock_script"
+grep -Fq -- '--verif-text="正在验证"' "$lock_script"
+grep -Fq -- '--wrong-text="密码错误，请重试"' "$lock_script"
+grep -Fq -- '--noinput-text="尚未输入"' "$lock_script"
+grep -Fq -- '--greeter-text="请输入密码解锁"' "$lock_script"
+grep -Fq -- '--show-failed-attempts' "$lock_script"
+if grep -Fq -- '--no-unlock-indicator' "$lock_script"; then
+    echo "unlock indicator is disabled in the lock script" >&2
+    exit 1
+fi
+if grep -Eq -- 'avatar|username|LOCKSCREEN_(AVATAR|DISPLAY_NAME)' "$lock_script"; then
+    echo "avatar or username configuration remains in the lock script" >&2
     exit 1
 fi
 if grep -Eq -- 'avatar|username|user_pill' "$renderer"; then
@@ -38,6 +51,8 @@ if grep -Fq 'strftime' "$renderer"; then
     echo "static clock rendering remains in the background renderer" >&2
     exit 1
 fi
+grep -Fq 'logo_size = min(width, height) * 0.09' "$renderer"
+grep -Fq 'y + height * 0.50 - logo.get_height() * logo_scale / 2' "$renderer"
 
 preview="$tmp_dir/preview.png"
 mkdir -p "$tmp_dir/bin"
