@@ -68,6 +68,9 @@ for package_name in \
     meson \
     autoconf \
     automake \
+    linux-image-amd64 \
+    linux-headers-amd64 \
+    nvidia-driver \
     libpam0g-dev \
     libcairo2-dev \
     libxcb-xkb-dev \

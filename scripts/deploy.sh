@@ -45,3 +45,4 @@ link_config "$REPO_DIR/x11/mimeapps.list" "$HOME/.config/mimeapps.list" \
     "$REPO_DIR/x11/mimeapps.list.legacy"
 link_config "$REPO_DIR/shell/zshrc" "$HOME/.zshrc"
 link_config "$REPO_DIR/lockscreen/lock.sh" "$HOME/.local/bin/lock-screen"
+link_config "$REPO_DIR/scripts/update-system.sh" "$HOME/.local/bin/update-system"

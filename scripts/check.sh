@@ -115,6 +115,7 @@ check_executable "$REPO_DIR/lockscreen/render.py"
 check_executable "$REPO_DIR/scripts/install-i3lock-color.sh"
 check_executable "$REPO_DIR/scripts/install-omz.sh"
 check_executable "$REPO_DIR/scripts/set-default-shell.sh"
+check_executable "$REPO_DIR/scripts/update-system.sh"
 
 omz_dir="$HOME/.local/share/omz"
 if ! git -C "$omz_dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then

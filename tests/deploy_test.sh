@@ -31,6 +31,7 @@ assert_link "$test_home/.config/nvim/init.lua" "$repo_dir/neovim/init.lua"
 assert_link "$test_home/.config/mimeapps.list" "$repo_dir/x11/mimeapps.list"
 assert_link "$test_home/.zshrc" "$repo_dir/shell/zshrc"
 assert_link "$test_home/.local/bin/lock-screen" "$repo_dir/lockscreen/lock.sh"
+assert_link "$test_home/.local/bin/update-system" "$repo_dir/scripts/update-system.sh"
 
 # A second run must leave already-correct links untouched.
 HOME="$test_home" "$repo_dir/scripts/deploy.sh"

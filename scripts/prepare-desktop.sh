@@ -81,6 +81,14 @@ build_tools=(
     ninja-build
 )
 
+# 内核与显卡驱动：同时跟踪最新内核和对应头文件，让 NVIDIA DKMS 驱动在
+# 内核升级后自动重建；NVIDIA 元包提供 Xorg 驱动、用户态库和 DKMS 模块。
+kernel_graphics=(
+    linux-image-amd64
+    linux-headers-amd64
+    nvidia-driver
+)
+
 # i3lock-color 源码编译依赖；上游不在 Debian 官方仓库中，由固定版本的
 # scripts/install-i3lock-color.sh 编译并安装为 ~/.local/bin/i3lock-color。
 i3lock_color_headers=(
@@ -140,6 +148,7 @@ sudo apt-get install --no-install-recommends -y \
     "${desktop_runtime[@]}" \
     "${fonts[@]}" \
     "${build_tools[@]}" \
+    "${kernel_graphics[@]}" \
     "${suckless_headers[@]}" \
     "${picom_headers[@]}" \
     "${i3lock_color_headers[@]}"
