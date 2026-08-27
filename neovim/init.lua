@@ -397,6 +397,14 @@ local function setup_plugins()
         checker = { enabled = false },
         change_detection = { notify = false },
         rocks = { enabled = false },
+        -- Debian installs its bundled Tree-sitter parsers here.  Keep this
+        -- directory after lazy.nvim resets runtimepath so LSP Markdown
+        -- documentation can use markdown.so and markdown_inline.so.
+        performance = {
+            rtp = {
+                paths = { "/usr/lib/nvim" },
+            },
+        },
         ui = { border = "rounded" },
     })
 end

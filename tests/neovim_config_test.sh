@@ -69,5 +69,6 @@ grep -Fq '"ibhagwan/fzf-lua"' "$repo_dir/neovim/init.lua"
 grep -Fq '"lewis6991/gitsigns.nvim"' "$repo_dir/neovim/init.lua"
 grep -Fq '"neovim/nvim-lspconfig"' "$repo_dir/neovim/init.lua"
 grep -Fq 'version = "v1.8.0"' "$repo_dir/neovim/init.lua"
+grep -Fq 'paths = { "/usr/lib/nvim" }' "$repo_dir/neovim/init.lua"
 
 printf '%s\n' "neovim config tests passed"
