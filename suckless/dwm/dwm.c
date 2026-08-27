@@ -192,7 +192,7 @@ static int getrootptr(int *x, int *y);
 static long getstate(Window w);
 static int gettextprop(Window w, Atom atom, char *text, unsigned int size);
 static void getclientlabel(Client *c, char *label, size_t size);
-static XImage *getwindowximage(Client *c);
+static Pixmap createpreviewpixmap(Client *c, unsigned int width, unsigned int height);
 static void grabbuttons(Client *c, int focused);
 static void grabkeys(void);
 static void incnmaster(const Arg *arg);
@@ -223,7 +223,6 @@ static void resizemouse(const Arg *arg);
 static void restack(Monitor *m);
 static void run(void);
 static void scan(void);
-static XImage *scaledownimage(Client *c, unsigned int width, unsigned int height);
 static int sendevent(Client *c, Atom proto);
 static void sendmon(Client *c, Monitor *m);
 static void setclientstate(Client *c, long state);
@@ -306,7 +305,7 @@ static Clr **scheme;
 static Display *dpy;
 static Drw *drw;
 static Monitor *mons, *selmon;
-static Window root, wmcheckwin;
+static Window overviewwin, root, wmcheckwin;
 
 /* configuration, allows nested code to access above variables */
 #include "config.h"
@@ -586,7 +585,10 @@ clearoverview(Monitor *m, Client *selected)
 		if (c->preview.win)
 			XDestroyWindow(dpy, c->preview.win);
 		c->preview.win = None;
-		XMapWindow(dpy, c->win);
+	}
+	if (overviewwin) {
+		XDestroyWindow(dpy, overviewwin);
+		overviewwin = None;
 	}
 
 	if (selected) {
@@ -1090,27 +1092,28 @@ getclientlabel(Client *c, char *label, size_t size)
 		XFree(ch.res_name);
 }
 
-XImage *
-getwindowximage(Client *c)
+Pixmap
+createpreviewpixmap(Client *c, unsigned int width, unsigned int height)
 {
 	int hasalpha;
 	Picture destination, source;
 	Pixmap pixmap;
-	XImage *image;
 	XRenderPictFormat *destinationformat, *sourceformat;
 	XRenderPictureAttributes attributes = { .subwindow_mode = IncludeInferiors };
 	XRenderColor background = { 0, 0, 0, 0xffff };
+	XTransform transform;
 	XWindowAttributes windowattributes;
 
-	if (!XGetWindowAttributes(dpy, c->win, &windowattributes))
-		return NULL;
+	if (width == 0 || height == 0 || c->w <= 0 || c->h <= 0 ||
+	    !XGetWindowAttributes(dpy, c->win, &windowattributes))
+		return None;
 	sourceformat = XRenderFindVisualFormat(dpy, windowattributes.visual);
 	destinationformat = XRenderFindVisualFormat(dpy, DefaultVisual(dpy, screen));
-	if (!sourceformat || !destinationformat || c->w <= 0 || c->h <= 0)
-		return NULL;
+	if (!sourceformat || !destinationformat)
+		return None;
 
 	hasalpha = sourceformat->type == PictTypeDirect && sourceformat->direct.alphaMask;
-	pixmap = XCreatePixmap(dpy, root, c->w, c->h, DefaultDepth(dpy, screen));
+	pixmap = XCreatePixmap(dpy, root, width, height, DefaultDepth(dpy, screen));
 	source = XRenderCreatePicture(dpy, c->win, sourceformat,
 		CPSubwindowMode, &attributes);
 	destination = XRenderCreatePicture(dpy, pixmap, destinationformat, 0, NULL);
@@ -1120,19 +1123,24 @@ getwindowximage(Client *c)
 		if (destination)
 			XRenderFreePicture(dpy, destination);
 		XFreePixmap(dpy, pixmap);
-		return NULL;
+		return None;
 	}
 
 	XRenderFillRectangle(dpy, PictOpSrc, destination, &background,
-		0, 0, c->w, c->h);
+		0, 0, width, height);
+	transform = (XTransform){{
+		{ XDoubleToFixed((double)c->w / width), XDoubleToFixed(0.0), XDoubleToFixed(0.0) },
+		{ XDoubleToFixed(0.0), XDoubleToFixed((double)c->h / height), XDoubleToFixed(0.0) },
+		{ XDoubleToFixed(0.0), XDoubleToFixed(0.0), XDoubleToFixed(1.0) }
+	}};
+	XRenderSetPictureTransform(dpy, source, &transform);
+	XRenderSetPictureFilter(dpy, source, FilterBilinear, NULL, 0);
 	XRenderComposite(dpy, hasalpha ? PictOpOver : PictOpSrc,
-		source, None, destination, 0, 0, 0, 0, 0, 0, c->w, c->h);
-	image = XGetImage(dpy, pixmap, 0, 0, c->w, c->h, AllPlanes, ZPixmap);
+		source, None, destination, 0, 0, 0, 0, 0, 0, width, height);
 
 	XRenderFreePicture(dpy, source);
 	XRenderFreePicture(dpy, destination);
-	XFreePixmap(dpy, pixmap);
-	return image;
+	return pixmap;
 }
 
 void
@@ -1814,35 +1822,6 @@ run(void)
 			handler[ev.type](&ev); /* call handler */
 }
 
-XImage *
-scaledownimage(Client *c, unsigned int width, unsigned int height)
-{
-	unsigned int x, y;
-	XImage *image, *original;
-
-	original = getwindowximage(c);
-	if (!original || width == 0 || height == 0)
-		return NULL;
-
-	image = XCreateImage(dpy, DefaultVisual(dpy, screen),
-		DefaultDepth(dpy, screen), ZPixmap, 0, NULL,
-		width, height, 32, 0);
-	if (!image) {
-		XDestroyImage(original);
-		return NULL;
-	}
-	image->data = ecalloc(image->height, image->bytes_per_line);
-	for (y = 0; y < height; y++)
-		for (x = 0; x < width; x++)
-			XPutPixel(image, x, y,
-				XGetPixel(original,
-					x * original->width / width,
-					y * original->height / height));
-
-	XDestroyImage(original);
-	return image;
-}
-
 void
 scan(void)
 {
@@ -1971,9 +1950,10 @@ setpreviewwins(Monitor *m)
 	unsigned int i, n, row, rowcount, rowoffset, rows, rowwidth;
 	int ok = 0;
 	Client *c;
-	GC gc;
+	XClassHint backdropclass = { "dwm-overview", "DwmOverviewBackdrop" };
+	XClassHint cardclass = { "dwm-overview-card", "DwmOverviewCard" };
 	Pixmap pixmap;
-	XImage *image;
+	XSetWindowAttributes attributes = { .override_redirect = True };
 
 	for (n = 0, c = m->clients; c; c = c->next, n++);
 	if (n == 0)
@@ -1993,8 +1973,8 @@ setpreviewwins(Monitor *m)
 	gridh = rows * cardh + (rows - 1) * gap;
 
 	for (i = 0, c = m->clients; c; c = c->next, i++) {
-		image = scaledownimage(c, cardw, cardh);
-		if (!image)
+		pixmap = createpreviewpixmap(c, cardw, cardh);
+		if (!pixmap)
 			continue;
 		row = i / cols;
 		rowcount = MIN(cols, n - row * cols);
@@ -2008,27 +1988,27 @@ setpreviewwins(Monitor *m)
 			c->preview.x, c->preview.y, c->preview.w, c->preview.h,
 			2, scheme[SchemeNorm][ColBorder].pixel,
 			scheme[SchemeNorm][ColBg].pixel);
+		XChangeWindowAttributes(dpy, c->preview.win, CWOverrideRedirect, &attributes);
+		XSetClassHint(dpy, c->preview.win, &cardclass);
 		XSelectInput(dpy, c->preview.win,
 			ButtonPressMask|EnterWindowMask|LeaveWindowMask);
-		pixmap = XCreatePixmap(dpy, root, cardw, cardh,
-			DefaultDepth(dpy, screen));
-		gc = XCreateGC(dpy, pixmap, 0, NULL);
-		XSetForeground(dpy, gc, scheme[SchemeNorm][ColBg].pixel);
-		XFillRectangle(dpy, pixmap, gc, 0, 0, cardw, cardh);
-		XPutImage(dpy, pixmap, gc, image, 0, 0, 0, 0,
-			cardw, cardh);
 		XSetWindowBackgroundPixmap(dpy, c->preview.win, pixmap);
-		XFreeGC(dpy, gc);
 		XFreePixmap(dpy, pixmap);
-		XDestroyImage(image);
-		XUnmapWindow(dpy, c->win);
-		XMapRaised(dpy, c->preview.win);
 		ok = 1;
 	}
 	if (!ok) {
 		clearoverview(m, NULL);
 		return 0;
 	}
+	overviewwin = XCreateSimpleWindow(dpy, root, m->wx, m->wy, m->ww, m->wh,
+		0, scheme[SchemeNorm][ColBorder].pixel, scheme[SchemeNorm][ColBg].pixel);
+	XChangeWindowAttributes(dpy, overviewwin, CWOverrideRedirect, &attributes);
+	XSetClassHint(dpy, overviewwin, &backdropclass);
+	XSelectInput(dpy, overviewwin, ButtonPressMask);
+	XMapRaised(dpy, overviewwin);
+	for (c = m->clients; c; c = c->next)
+		if (c->preview.win)
+			XMapRaised(dpy, c->preview.win);
 	XSync(dpy, False);
 	return 1;
 }
