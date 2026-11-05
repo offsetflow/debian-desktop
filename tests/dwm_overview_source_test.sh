@@ -27,6 +27,7 @@ grep -q "rowoffset = (m->ww - rowwidth) / 2;" "$DWM_C"
 # 用一个遮罩层覆盖真实窗口，不能通过批量 Unmap/Map 触发 Picom 动画风暴。
 grep -q 'DwmOverviewBackdrop' "$DWM_C"
 grep -q 'DwmOverviewCard' "$DWM_C"
+grep -q 'XSetWindowBackgroundPixmap(dpy, overviewwin, ParentRelative)' "$DWM_C"
 setpreview_body=$(sed -n '/^setpreviewwins(Monitor \*m)/,/^}/p' "$DWM_C")
 clearoverview_body=$(sed -n '/^clearoverview(Monitor \*m, Client \*selected)/,/^}/p' "$DWM_C")
 ! printf '%s\n' "$setpreview_body" | grep -q 'XUnmapWindow(dpy, c->win)'

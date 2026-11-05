@@ -2003,6 +2003,8 @@ setpreviewwins(Monitor *m)
 	overviewwin = XCreateSimpleWindow(dpy, root, m->wx, m->wy, m->ww, m->wh,
 		0, scheme[SchemeNorm][ColBorder].pixel, scheme[SchemeNorm][ColBg].pixel);
 	XChangeWindowAttributes(dpy, overviewwin, CWOverrideRedirect, &attributes);
+	/* Keep the overview responsive without replacing the desktop wallpaper. */
+	XSetWindowBackgroundPixmap(dpy, overviewwin, ParentRelative);
 	XSetClassHint(dpy, overviewwin, &backdropclass);
 	XSelectInput(dpy, overviewwin, ButtonPressMask);
 	XMapRaised(dpy, overviewwin);
